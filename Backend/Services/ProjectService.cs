@@ -10,8 +10,8 @@ namespace smart_task_manager.Services
     {
         Task<List<Project>> GetAll();
         Task<Project> GetProjectById(int id);
-        //Task<Project> CreateProject(Project project);
-        //Task<bool> UpdateProject(Project UpdatedProject);
+        Task<Project> CreateProject(Project project);
+        Task<bool> UpdateProject(Project UpdatedProject);
         Task<bool> DeleteProject(int id);
     }
 
@@ -41,25 +41,25 @@ namespace smart_task_manager.Services
             return await _context.Projects.FindAsync(id);
         }
         // Create a new project
-        /*public async Task<Project> CreateProject(Project project)
+        public async Task<Project> CreateProject(Project project)
         {
             // Add the new project to the database context
             _context.Projects.Add(project);
 
             // Save the changes to actually write to the database
             await _context.SaveChangesAsync();
-            await _notificationService.CreateNotification(new Notification
+            /*await _notificationService.CreateNotification(new Notification
             {
                 UserId = project.UserId,
                 Message = $"A new project '{project.Name}' .",
                 ProjectId = project.Id
-            });
+            });*/
             // Return the created project (now it has an ID from the database)
             return project;
-        }*/
+        }
 
         // Update project
-       /* public async Task<bool> UpdateProject(Project UpdatedProject)
+        public async Task<bool> UpdateProject(Project UpdatedProject)
         {
             var ExistingProject = await _context.Projects.FindAsync(UpdatedProject.Id);
             if (ExistingProject == null)
@@ -75,7 +75,7 @@ namespace smart_task_manager.Services
 
             // Save changes to database
             await _context.SaveChangesAsync();
-            if (statusChanged || dueDateChanged)
+            /*if (statusChanged || dueDateChanged)
             {
                 await _notificationService.CreateNotification(new Notification
                 {
@@ -87,11 +87,11 @@ namespace smart_task_manager.Services
 
                 });
                 // Return true for success
-            }
+            }*/
             return true;
 
         }
-       */
+       
         // Delete project - FIXED variable names
         public async Task<bool> DeleteProject(int id)
         {

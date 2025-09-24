@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function ModeSelection(){
+export default function Home(){
     const [mode,setMode]=useState("Personal");
 
 return(

@@ -13,10 +13,16 @@ export const login = async (Email, Password) =>{
 };
 export const register =async (email ,password , mode="personal") =>{
     try{
-        const response= await api.post("baseURL/auth/register" ,{email,password, mode});
+        const response= await api.post("http://localhost:5000/api/auth/register" ,{email,password, mode});
         return response.data
     }catch (error)
     {
+        //get error array from Axios
+        const errors = error.response?.data || [{description:"Unknown error"}];
+        //get error array from Axios
+    const errorMessage = errors.map(e => e.description).join("\n");
+    alert(errorMessage);
+
     console.error("Register error:", error.response?.data || error.message);
         throw error;
     }

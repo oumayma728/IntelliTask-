@@ -30,14 +30,14 @@ namespace smart_task_manager.Controllers
             if (project == null) return NotFound();
             return Ok(project);
         }
-        /*[Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Manager")]
         [HttpPost]
         public async Task<IActionResult> createProject(Project Project)
         {
             var result = await _projectService.CreateProject(Project);
             return Ok(result);
-        }*/
-        /*[HttpPut("{id}")]
+        }
+        [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProject(int id, [FromBody] Project updatedProject)
         {
             var Project = await _projectService.GetProjectById(id);
@@ -53,7 +53,7 @@ namespace smart_task_manager.Controllers
                 // Return 400 Bad Request if something went wrong
                 return BadRequest($"Failed to update Project with ID {id}.");
             }
-        }*/
+        }
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProject(int id)
         {    // find the task first

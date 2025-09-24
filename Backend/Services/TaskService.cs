@@ -9,9 +9,9 @@ namespace smart_task_manager.Services
     {
         Task<List<TaskItem>> GetAll();
         Task<TaskItem?> GetTaskById(int id);
-        //Task<TaskItem?> CreateTask(TaskItem task); // ← Changed from createTask to CreateTask
+        Task<TaskItem?> CreateTask(TaskItem task); // ← Changed from createTask to CreateTask
         Task<bool> DeleteTask(int id);
-        //Task<bool> UpdateTask(TaskItem updatedTask);
+        Task<bool> UpdateTask(TaskItem updatedTask);
     } // ← Interface ends here
 
     // 2. SERVICE CLASS (the implementation) - at same level as interface
@@ -38,22 +38,22 @@ namespace smart_task_manager.Services
             return await _context.Tasks.FindAsync(id);
         }
 
-        /*public async Task<TaskItem?> CreateTask(TaskItem task) // ← Changed from createTask to CreateTask
+        public async Task<TaskItem?> CreateTask(TaskItem task) // ← Changed from createTask to CreateTask
         {
             // Add the new task to the database context
             _context.Tasks.Add(task);
 
             // Save the changes to actually write to the database
             await _context.SaveChangesAsync();
-            await _notificationService.CreateNotification(new Notification
+            /*await _notificationService.CreateNotification(new Notification
             {
                 UserId = task.UserId,
                 Message = $"A new task '{task.Title}' has been assigned to you.",
                 TaskId = task.Id
-            });
+            });*/
             // Return the created task (now it has an ID from the database)
             return task;
-        }*/
+        }
 
         public async Task<bool> DeleteTask(int id)
         {
@@ -74,7 +74,7 @@ namespace smart_task_manager.Services
             return true;
         }
 
-        /*public async Task<bool> UpdateTask(TaskItem updatedTask)
+        public async Task<bool> UpdateTask(TaskItem updatedTask)
         {
             var ExistingTask = await _context.Tasks.FindAsync(updatedTask.Id);
 
@@ -95,7 +95,7 @@ namespace smart_task_manager.Services
             // Save changes to database
             await _context.SaveChangesAsync();
             // Send notification if status or due date changed
-            if (statusChanged || dueDateChanged)
+            /*if (statusChanged || dueDateChanged)
             {
                 await _notificationService.CreateNotification(new Notification
                 {
@@ -108,9 +108,9 @@ namespace smart_task_manager.Services
                 });
                 // Return true for success
 
-            }
+            }*/
             return true;
 
-        }*/
+        }
     }
 }

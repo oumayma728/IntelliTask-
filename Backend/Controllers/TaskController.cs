@@ -30,7 +30,7 @@ namespace smart_task_manager.Controllers
             if (task == null) return NotFound();
             return Ok(task);
         }
-       /* [Authorize(Roles = "Manager,User")]
+       [Authorize(Roles = "Manager,User")]
         [HttpPost]
         public async Task<IActionResult> createTask(TaskItem task)
         {
@@ -69,7 +69,7 @@ namespace smart_task_manager.Controllers
                 // Return 400 Bad Request if something went wrong
                 return BadRequest($"Failed to update task with ID {id}.");
             }
-        }*/
+        }
     }
 }
 
