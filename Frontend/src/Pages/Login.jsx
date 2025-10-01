@@ -47,12 +47,12 @@ setUser({ email: data.email, username: data.username });
         alert("Login failed")
     }
 };
-const login =useGoogleLogin({
+const googleLogin  =useGoogleLogin({
     onSuccess:credentialResponse =>{
         console.log(credentialResponse);
 // Decode the JWT credential
-      const decoded = jwtDecode(credentialResponse.credential);
-      console.log("Decoded Google token:", decoded);    },
+    const decoded = jwtDecode(credentialResponse.credential);
+    console.log("Decoded Google token:", decoded);    },
     onError :()=>console.log("Login failed")
 })
 return (
@@ -60,7 +60,7 @@ return (
     <div className="bg-gray-800 backdrop-blur-md border border-white/600 p-8 rounded-2xl shadow-lg w-full max-w-md ">
     <h2 className="text-2xl font-bold mb-6 text-center text-white ">Login</h2>
 <button 
-  onClick={login}
+  onClick={googleLogin}
   className="flex items-center justify-center gap-5 bg-white text-gray-600 font-semibold px-5 py-5 rounded-md border-2 border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-200 w-full"
 >
   <img 
