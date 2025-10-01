@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using smart_task_manager.Models;
 using smart_task_manager.Services;
+using smart_task_manager.DTOs;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace smart_task_manager.Controllers
 {
@@ -10,9 +13,12 @@ namespace smart_task_manager.Controllers
     public class TaskController : ControllerBase
     {
         private readonly ITaskService _taskService;
-        public TaskController(ITaskService taskService)
+        private readonly UserManager<User> _userManager;
+
+        public TaskController(ITaskService taskService , UserManager<User> userManager)
         {
             _taskService = taskService;
+            _userManager = userManager;
         }
         //Get : get all tasks
         [Authorize(Roles = "Manager,User")]
@@ -24,50 +30,67 @@ namespace smart_task_manager.Controllers
 
         }
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetTasksById(int id)
-        {
-            var task = await _taskService.GetTaskById(id);
+        public async Task<IActionResult> GetTasksById(string Id)
+        {  
+            var task = await _taskService.GetTaskById(Id);
             if (task == null) return NotFound();
             return Ok(task);
         }
-       [Authorize(Roles = "Manager,User")]
+        [Authorize(Roles = "Manager,User")]
         [HttpPost]
-        public async Task<IActionResult> createTask(TaskItem task)
+        public async Task<IActionResult> CreateTask([FromBody] CreateTaskDto dto)
         {
-            var newTask = await _taskService.CreateTask(task);
+            // Get user ID from claims/token
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ;
+
+            if (string.IsNullOrEmpty(userId))
+             {
+                 return Unauthorized("User not authenticated");
+             }
+            // Map DTO to TaskItem entity
+            var task = new TaskItem
+            {
+                Title = dto.Title,
+                DueDate = dto.DueDate,
+                ProjectName = dto.ProjectName,
+                Description = dto.Description,
+                Status = dto.Status
+            };
+
+            var newTask = await _taskService.CreateTask(task, userId);
             return Ok(newTask);
         }
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTask(int id)
+        public async Task<IActionResult> DeleteTask(string Id)
         {    // find the task first
-            var task = await _taskService.GetTaskById(id);
+            var task = await _taskService.GetTaskById(Id);
             if (task == null) return NotFound();
-            var result = await _taskService.DeleteTask(id);
+            var result = await _taskService.DeleteTask(Id);
             if (result)
             {
                 // Return 200 OK with success message
-                return Ok($"Task with ID {id} was deleted successfully.");
+                return Ok($"Task with ID {Id} was deleted successfully.");
             }
             else
             {
                 // Return 400 Bad Request if something went wrong
-                return BadRequest($"Failed to delete task with ID {id}.");
+                return BadRequest($"Failed to delete task with ID {Id}.");
             }
         }
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTask(int id, TaskItem task)
-        { var existing = await _taskService.GetTaskById(id);
+        public async Task<IActionResult> UpdateTask( TaskItem task , string Id)
+        { var existing = await _taskService.GetTaskById(Id);
             if (existing == null) return NotFound();
-            var result = await _taskService.UpdateTask(task);
+            var result = await _taskService.UpdateTask(task, Id);
             if (result)
             {
                 // Return 200 OK with success message
-                return Ok($"Task with ID {id} was updated successfully.");
+                return Ok($"Task with ID {Id} was updated successfully.");
             }
             else
             {
                 // Return 400 Bad Request if something went wrong
-                return BadRequest($"Failed to update task with ID {id}.");
+                return BadRequest($"Failed to update task with ID {Id}.");
             }
         }
     }

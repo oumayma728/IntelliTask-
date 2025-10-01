@@ -1,4 +1,4 @@
-/*using smart_task_manager.Data;
+using smart_task_manager.Data;
 using smart_task_manager.Services;
 using smart_task_manager.Models;
 using Microsoft.EntityFrameworkCore;
@@ -39,7 +39,8 @@ public class DeadlineCheckerService : BackgroundService
                         UserId = task.UserId,
                         Message = $"Reminder: Task '{task.Title}' is due soon!",
                         TaskId = task.Id
-                    });
+                    }); 
+
                 }
             }
 
@@ -47,4 +48,4 @@ public class DeadlineCheckerService : BackgroundService
             await Task.Delay(TimeSpan.FromHours(1), stoppingToken);// wait 1 hour before checking again
         }
     }
-}*/
+}

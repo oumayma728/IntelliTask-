@@ -1,7 +1,8 @@
-/*using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using smart_task_manager.Data;
 using smart_task_manager.Models;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 
 namespace smart_task_manager.Services
 {
@@ -18,10 +19,14 @@ namespace smart_task_manager.Services
     public class NotificationService : INotificationService
     {
         private readonly AppDbContext _context;
+        private readonly UserManager<User> _userManager; // add this
+
         //Constructor
-        public NotificationService(AppDbContext context)
+        public NotificationService(AppDbContext context, UserManager<User> userManager)
         {
             _context = context;
+            _userManager = userManager;
+
         }
 
         //Get all notifications
@@ -80,9 +85,16 @@ namespace smart_task_manager.Services
         }
         public async Task CreateNotification(Notification notification)
         {
-            _context.Notifications.Add(notification);
-            await _context.SaveChangesAsync();
+            var user = await _userManager.FindByIdAsync(notification.UserId);
+            if (user == null)
+            
+                // Option 1: throw exception (current behavior)
+                throw new Exception($"User with Id {notification.UserId} does not exist.");
+                notification.CreatedAt = DateTime.UtcNow;
+                notification.IsRead = false;
+                _context.Notifications.Add(notification);
+                await _context.SaveChangesAsync();
+            
         }
     }
-
-}*/
+}

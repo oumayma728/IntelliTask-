@@ -8,24 +8,23 @@ namespace smart_task_manager.Services
     public interface ITaskService
     {
         Task<List<TaskItem>> GetAll();
-        Task<TaskItem?> GetTaskById(int id);
-        Task<TaskItem?> CreateTask(TaskItem task); // ← Changed from createTask to CreateTask
-        Task<bool> DeleteTask(int id);
-        Task<bool> UpdateTask(TaskItem updatedTask);
-    } // ← Interface ends here
+        Task<TaskItem?> GetTaskById(string id);
+        Task<TaskItem?> CreateTask(TaskItem task, string userId);
+        Task<bool> DeleteTask(string id);
+        Task<bool> UpdateTask(TaskItem updatedTask, string userId);
+    }
 
-    // 2. SERVICE CLASS (the implementation) - at same level as interface
+    // 2. SERVICE CLASS (the implementation)
     public class TaskService : ITaskService
     {
         private readonly AppDbContext _context;
-        //private readonly NotificationService _notificationService;
+        private readonly INotificationService _notificationService;
 
-
-        //gives service access to the database
-        public TaskService(AppDbContext context/*, NotificationService notificationService*/)
+        // gives service access to the database
+        public TaskService(AppDbContext context, INotificationService notificationService)
         {
             _context = context;
-            //_notificationService = notificationService;
+            _notificationService = notificationService;
         }
 
         public async Task<List<TaskItem>> GetAll()
@@ -33,84 +32,81 @@ namespace smart_task_manager.Services
             return await _context.Tasks.ToListAsync();
         }
 
-        public async Task<TaskItem?> GetTaskById(int id)
+        public async Task<TaskItem?> GetTaskById(string id)
         {
             return await _context.Tasks.FindAsync(id);
         }
 
-        public async Task<TaskItem?> CreateTask(TaskItem task) // ← Changed from createTask to CreateTask
+        public async Task<TaskItem?> CreateTask(TaskItem task, string userId)
         {
+            task.UserId = userId;
+
             // Add the new task to the database context
             _context.Tasks.Add(task);
-
-            // Save the changes to actually write to the database
             await _context.SaveChangesAsync();
-            /*await _notificationService.CreateNotification(new Notification
+
+            var notification = new Notification
             {
-                UserId = task.UserId,
-                Message = $"A new task '{task.Title}' has been assigned to you.",
-                TaskId = task.Id
-            });*/
-            // Return the created task (now it has an ID from the database)
+                UserId = userId,
+                TaskId = task.Id,
+                title = $"New Task Created: {task.Title}", // ✅ Add this
+                Message = $"Task '{task.Title}' has been created",
+                CreatedAt = DateTime.Now,
+                IsRead = false
+            };
+            // Create a notification for this task
+            await _notificationService.CreateNotification(notification);
+
             return task;
         }
 
-        public async Task<bool> DeleteTask(int id)
+        public async Task<bool> DeleteTask(string id)
         {
-            // 1. Find the task
             var task = await _context.Tasks.FindAsync(id);
 
-            // 2. If task doesn't exist, return false
             if (task == null)
                 return false;
 
-            // 3. If task exists, remove it
             _context.Tasks.Remove(task);
-
-            // 4. Save changes to database
             await _context.SaveChangesAsync();
-
-            // 5. Return true for success
             return true;
         }
 
-        public async Task<bool> UpdateTask(TaskItem updatedTask)
+        public async Task<bool> UpdateTask(TaskItem updatedTask, string userId)
         {
-            var ExistingTask = await _context.Tasks.FindAsync(updatedTask.Id);
+            var existingTask = await _context.Tasks.FindAsync(updatedTask.Id);
 
-            if (ExistingTask == null)
+            if (existingTask == null)
                 return false;
+
             // Check if relevant fields changed
-            bool statusChanged = ExistingTask.Status != updatedTask.Status;
-            bool dueDateChanged = ExistingTask.DueDate != updatedTask.DueDate;
+            bool statusChanged = existingTask.Status != updatedTask.Status;
+            bool dueDateChanged = existingTask.DueDate != updatedTask.DueDate;
 
             // update fields
-            ExistingTask.Title = updatedTask.Title;
-            ExistingTask.Description = updatedTask.Description;
-            ExistingTask.DueDate = updatedTask.DueDate;
-            ExistingTask.Status = updatedTask.Status;
+            existingTask.Title = updatedTask.Title;
+            existingTask.Description = updatedTask.Description;
+            existingTask.DueDate = updatedTask.DueDate;
+            existingTask.Status = updatedTask.Status;
 
-            _context.Tasks.Update(ExistingTask);
-
-            // Save changes to database
+            _context.Tasks.Update(existingTask);
             await _context.SaveChangesAsync();
+
             // Send notification if status or due date changed
-            /*if (statusChanged || dueDateChanged)
+            if (statusChanged || dueDateChanged)
             {
                 await _notificationService.CreateNotification(new Notification
                 {
-                    UserId = ExistingTask.UserId,
-                    Message = $"Project '{ExistingTask.Title}' updated. " +
-                      $"{(statusChanged ? $"Status changed to {ExistingTask.Status}. " : "")}" +
-                      $"{(dueDateChanged ? $"Due date changed to {ExistingTask.DueDate:yyyy-MM-dd}." : "")}",
-                    TaskId = ExistingTask.Id
-
+                    UserId = existingTask.UserId,
+                    Message = $"Task '{existingTask.Title}' updated. " +
+                              $"{(statusChanged ? $"Status changed to {existingTask.Status}. " : "")}" +
+                              $"{(dueDateChanged ? $"Due date changed to {existingTask.DueDate:yyyy-MM-dd}." : "")}",
+                    TaskId = existingTask.Id
                 });
-                // Return true for success
+            }
 
-            }*/
             return true;
-
         }
     }
 }
+ 

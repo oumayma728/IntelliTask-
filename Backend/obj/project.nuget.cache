@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "G6UhnOiW6M0=",
+  "dgSpecHash": "7AZGWeihAak=",
   "success": true,
-  "projectFilePath": "C:\\Users\\21699\\source\\repos\\Smart task manager\\smart task manager\\smart task manager.csproj",
+  "projectFilePath": "C:\\Users\\21699\\source\\repos\\Smart task manager\\Backend\\smart task manager.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\21699\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\21699\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",

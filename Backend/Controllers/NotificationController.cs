@@ -1,4 +1,4 @@
-﻿/*using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using smart_task_manager.Services;
 using smart_task_manager.Models;
 namespace smart_task_manager.Controllers
@@ -82,4 +82,4 @@ namespace smart_task_manager.Controllers
             }
         }
     }
-*/
+

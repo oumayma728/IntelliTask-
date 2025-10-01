@@ -10,7 +10,7 @@ namespace smart_task_manager.Services
     {
         Task<List<Project>> GetAll();
         Task<Project> GetProjectById(int id);
-        Task<Project> CreateProject(Project project);
+        Task<Project> CreateProject(Project project , string userId);
         Task<bool> UpdateProject(Project UpdatedProject);
         Task<bool> DeleteProject(int id);
     }
@@ -19,14 +19,14 @@ namespace smart_task_manager.Services
     public class ProjectService : IProjectService
     {
         private readonly AppDbContext _context;
-       // private readonly NotificationService _notificationService;
+       private readonly INotificationService _notificationService;
 
 
         // Constructor - gives service access to the database
-        public ProjectService(AppDbContext context /*, NotificationService notificationService*/)
+        public ProjectService(AppDbContext context , INotificationService notificationService)
         {
             _context = context;
-           // _notificationService = notificationService;
+            _notificationService = notificationService;
         }
 
         // Get all projects
@@ -41,19 +41,24 @@ namespace smart_task_manager.Services
             return await _context.Projects.FindAsync(id);
         }
         // Create a new project
-        public async Task<Project> CreateProject(Project project)
+        public async Task<Project> CreateProject(Project project, string userId)
         {
+            project.UserId = userId;
             // Add the new project to the database context
             _context.Projects.Add(project);
 
             // Save the changes to actually write to the database
             await _context.SaveChangesAsync();
-            /*await _notificationService.CreateNotification(new Notification
+            var notification = new Notification
             {
-                UserId = project.UserId,
-                Message = $"A new project '{project.Name}' .",
-                ProjectId = project.Id
-            });*/
+                UserId = userId,
+                ProjectId = project.Id,
+                title = $"New project Created: {project.Name}", // ? Add this
+                Message = $"project '{project.Name}' has been created",
+                CreatedAt = DateTime.Now,
+                IsRead = false
+            };
+            await _notificationService.CreateNotification(notification);
             // Return the created project (now it has an ID from the database)
             return project;
         }
@@ -75,7 +80,7 @@ namespace smart_task_manager.Services
 
             // Save changes to database
             await _context.SaveChangesAsync();
-            /*if (statusChanged || dueDateChanged)
+            if (statusChanged || dueDateChanged)
             {
                 await _notificationService.CreateNotification(new Notification
                 {
@@ -87,7 +92,7 @@ namespace smart_task_manager.Services
 
                 });
                 // Return true for success
-            }*/
+            }
             return true;
 
         }

@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using smart_task_manager.Models;
 using smart_task_manager.Services;
-using Microsoft.AspNetCore.Authorization;
+using smart_task_manager.DTOs;
 
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 namespace smart_task_manager.Controllers
 {
     [ApiController] // tells ASP.NET this is an API controller
@@ -30,12 +33,31 @@ namespace smart_task_manager.Controllers
             if (project == null) return NotFound();
             return Ok(project);
         }
-        [Authorize(Roles = "Manager")]
         [HttpPost]
-        public async Task<IActionResult> createProject(Project Project)
+        public async Task<IActionResult> createProject([FromBody] CreateProjectDto dto)
         {
-            var result = await _projectService.CreateProject(Project);
-            return Ok(result);
+            //gets the user Id from their jwt claims
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User not authenticated");
+            }
+            var project = new Project
+            {
+                Name = dto.Name,
+                DueDate = dto.DueDate,
+                Description = dto.Description,
+                Status = dto.Status
+            };
+
+            var result = await _projectService.CreateProject(project,userId);
+            return Ok(new
+            {
+                project.Name,
+                project.Description,
+                project.DueDate,
+                project.Status
+            });
         }
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProject(int id, [FromBody] Project updatedProject)

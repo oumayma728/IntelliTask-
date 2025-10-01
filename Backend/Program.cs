@@ -28,11 +28,11 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 .AddDefaultTokenProviders();
 
 // Services
-//builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
-//builder.Services.AddHostedService<DeadlineCheckerService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddHostedService<DeadlineCheckerService>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -60,7 +60,6 @@ builder.Services.AddAuthentication(options =>
         ),
          ValidateIssuer = false,
          ValidateAudience = false
-
      };
  });
 
@@ -79,7 +78,6 @@ app.UseCors("AllowFrontend");
 
 app.UseHttpsRedirection();
 
-// ADD THIS LINE - CRUCIAL FOR AUTHENTICATION!
 app.UseAuthentication(); // ← THIS MUST COME BEFORE UseAuthorization()
 app.UseAuthorization();
 
