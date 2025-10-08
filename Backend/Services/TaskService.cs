@@ -4,7 +4,6 @@ using smart_task_manager.Models;
 
 namespace smart_task_manager.Services
 {
-    // 1. INTERFACE (the contract) - separate from the class
     public interface ITaskService
     {
         Task<List<TaskItem>> GetAll();
@@ -17,18 +16,19 @@ namespace smart_task_manager.Services
     // 2. SERVICE CLASS (the implementation)
     public class TaskService : ITaskService
     {
-        private readonly AppDbContext _context;
-        private readonly INotificationService _notificationService;
+        private readonly AppDbContext _context; //allows access to the database.
+        private readonly INotificationService _notificationService; //allows sending notifications.
 
         // gives service access to the database
         public TaskService(AppDbContext context, INotificationService notificationService)
         {
-            _context = context;
+            _context = context; 
             _notificationService = notificationService;
         }
 
         public async Task<List<TaskItem>> GetAll()
-        {
+        {//_context.Tasks : accesses the Tasks table in the database.
+            //converts all rows to a C# list.
             return await _context.Tasks.ToListAsync();
         }
 
@@ -38,7 +38,7 @@ namespace smart_task_manager.Services
         }
 
         public async Task<TaskItem?> CreateTask(TaskItem task, string userId)
-        {
+        {//Assigns the task to the user.
             task.UserId = userId;
 
             // Add the new task to the database context
@@ -73,7 +73,7 @@ namespace smart_task_manager.Services
         }
 
         public async Task<bool> UpdateTask(TaskItem updatedTask, string userId)
-        {
+        {//check if the task exists.
             var existingTask = await _context.Tasks.FindAsync(updatedTask.Id);
 
             if (existingTask == null)

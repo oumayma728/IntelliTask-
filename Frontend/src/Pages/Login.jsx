@@ -23,23 +23,35 @@ const handleSubmit =async(e)=>{
         return;
     }
     console.log("API response:", data);
+        console.log("mode:", data.token.mode);
+
 
         //updates context with the token.
-        setToken(data.token);
+        setToken(data.token.token);
         //saves the logged-in user’s details in context.
-setUser({ email: data.email, username: data.username });
+setUser({ email: data.token.email, username: data.token.username });
         //sets user’s role
-        setMode(data.mode);    
+        setMode(data.token.mode);    
         //saves the token in the browser so the user stays logged in even after refresh.
-        localStorage.setItem("token", data.token);
-        if (data.mode === "Personal") {
+        localStorage.setItem("token", data.token.token);
+        localStorage.setItem('user', JSON.stringify(data));
+        localStorage.setItem("mode", data.token.mode);
+
+
+        if (data.token.mode === "personal") {
             console.log("Navigating to PersonalDashboard");
             navigate("/PersonalDashboard");
-        } else {
+            alert("login successful")
+            alert("Welcome to your personal dashboard");
+        } else if (data.token.mode === "Team") {
             console.log("Navigating to TeamDashboard");
             navigate("/TeamDashboard");
+            alert("login successful")
+            alert("Welcome to your Team dashboard");
         }
-        alert("login successful")
+        else{
+            alert("mode invalid")
+        }
         
     }
     catch (err)
@@ -67,8 +79,8 @@ return (
     src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
     alt="Google" 
     className="w-5 h-5"
-  />
-  Sign in with Google
+    />
+    Sign in with Google
 </button>
     <form className="flex flex-col gap-5"onSubmit={handleSubmit}>
         <input value={email} 

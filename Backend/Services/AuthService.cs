@@ -16,7 +16,7 @@ namespace smart_task_manager.Services
     {
         Task<IdentityResult> RegisterAsync(string email, string password);  
         Task<LoginResponseDto?> LoginAsync(string email, string password);
-    } // ← Interface ends here
+    } 
 
     // 2. SERVICE CLASS (the implementation) - at same level as interface
     public class AuthService : IAuthService
@@ -75,6 +75,7 @@ namespace smart_task_manager.Services
                 {
                     new Claim(ClaimTypes.NameIdentifier, user.Id),
                     new Claim(ClaimTypes.Email, user.Email),
+                    new Claim(ClaimTypes.Name, user.UserName),
                     new Claim(ClaimTypes.Role, user.Role.ToString())
 
                 }),
