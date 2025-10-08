@@ -41,12 +41,12 @@ if (mode==="team")
 }
     return(
         
-        <nav className={`shadow-md h-screen w-60 bg-gray-800 p-2 flex flex-col transition-all  duration-300 ${open? 'w-60':'w-20'} flex flex-com`}>
+        <nav className={`shadow-md h-screen bg-gray-800 p-2 flex flex-col transition-all  duration-300 ${open? 'w-60':'w-20'} `}>
             {/*Header*/}
             <div className="flex items-center border-b border-gray-600 pb-2 mb-7">
 
-            <img src={logo} className={`transition-all duration-300 ${open ? 'w-10':'w-0'} rounded-md`}/>
-            <MdOutlineMenuOpen size={30} className={`duration-500 cursor-pointer ${!open && 'rotate-180'}`} onClick={()=>setOpen(!open)}/>
+            <img src={logo} className={`transition-all duration-300 ${open ? 'w-14':'w-0'} rounded-md`}/>
+<MdOutlineMenuOpen size={30} className={`duration-500 cursor-pointer ${!open && 'rotate-180'}`} onClick={()=>setOpen(!open)}/>
             </div>
             {/*Body*/}
 
@@ -68,7 +68,7 @@ if (mode==="team")
         {/*Footer*/}
         <div className="px-3 py-2 border-t border-gray-600">
             <FaUserCircle size={30}/>
-            <div className={`leading-5${!open && 'w-0 translate-x-24'}`}>
+  <div className={`transition-all duration-300 overflow-hidden ${open ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>
                 <p >{user?.username}</p>
                 <span className="text-xs">{user?.email}</span>
             </div>

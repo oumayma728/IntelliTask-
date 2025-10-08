@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("smart task manager")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2a4ea33515cff75fc405655badbcf98787f1f1de")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b0313d93d5592434e1404f5dab15e0f1131be86c")]
 [assembly: System.Reflection.AssemblyProductAttribute("smart task manager")]
 [assembly: System.Reflection.AssemblyTitleAttribute("smart task manager")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

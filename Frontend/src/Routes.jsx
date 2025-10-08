@@ -7,6 +7,7 @@ import Register from "./Pages/Register";
 import TeamDashboard from "./Pages/TeamDashboard";
 import PersonalDashboard from "./Pages/PersonalDashboard"
 import Home from "./Pages/Home"
+import Task from "./Pages/Task"
 export default function AppRoutes() {
     const { token } = useAuth();
 
@@ -17,10 +18,10 @@ export default function AppRoutes() {
     <Route path="/register" element={<Register />} />
     <Route path="/TeamDashboard" element={<TeamDashboard />} />
     <Route path="/PersonalDashboard" element={<PersonalDashboard />} />
+        <Route path="/Task" element={<Task />} />
 
-
-
-    <Route path="*" element={<Navigate to="/login" />} />
+        
+<Route path="*" element={<Navigate to="/login" />} />
     </Routes>
 );
 }
