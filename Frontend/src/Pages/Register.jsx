@@ -5,10 +5,14 @@ export default function Register(){
     const [email,SetEmail]=useState("");
     const [password,SetPassword]=useState("");
     const [mode,SetMode]=useState("Personal");
+    const [success, setSuccess] = useState("");
     const { setUser, setToken, setMode } = useAuth();
-
+  const [alerts, setAlerts] = useState([]);
     const handleSumbit =async(e)=>{
         e.preventDefault(); 
+        setAlerts([]);
+        setSuccess("");
+
         try{
             const data = await register (email, password);
                     //updates context with the token.
@@ -19,10 +23,20 @@ export default function Register(){
                     SetMode(data.mode);    
                     //saves the token in the browser so the user stays logged in even after refresh.
                     localStorage.setItem("token", data.token);
-        }
+        
+        setSuccess("User registered successfully!");
+}
         catch (error)
+        {if(error.response && error.response.data?.errors)
         {
-            alert("register failed")
+            setAlerts(error.response.data.errors);
+        }
+        else if (error.response && error.response.data?.message) {
+        setAlerts([error.response.data.message]);
+      } else {
+        setAlerts(["Registration failed. Please try again."]);
+      }
+
         }
     
     }

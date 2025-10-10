@@ -6,7 +6,7 @@ export default function Tasks(){
     const [error, setError] = useState(null);
     const [task , SetTasks] =useState([]);
     const [searchTerm , SetSearchTerm]= useState("");
-    
+
     
     const filteredTasks = task.filter((task)=>{
         if(!searchTerm) return true;
@@ -21,7 +21,7 @@ useEffect(() => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const result = await response.json();
-      setData(result);
+      SetTasks(result);
     } catch (error) {
       setError(error);
     } finally {
@@ -47,6 +47,28 @@ useEffect(() => {
 
 
             </div>
+            <table>
+              <thead>
+                <tr className="border-b border-gray-600">
+                  <th className="px-4 py-2 text-left">Name</th>
+                  <th className="px-4 py-2 text-left">Description</th>
+                  <th className="px-4 py-2 text-left">DueDate</th>
+                  <th className="px-4 py-2 text-left">Project Name</th>
+                  <th className="px-4 py-2 text-left">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+            {filteredTasks.map((task, index) => (
+              <tr key={index} className="border-b border-gray-600">
+                <td className="px-4 py-2">{task.name}</td>
+                <td className="px-4 py-2">{task.description}</td>
+                <td className="px-4 py-2">{task.dueDate}</td>
+                <td className="px-4 py-2">{task.projectName}</td>
+                <td className="px-4 py-2">{task.status}</td>
+              </tr>
+            ))}
+          </tbody>
+            </table>
             </div>
         </div>
     )
