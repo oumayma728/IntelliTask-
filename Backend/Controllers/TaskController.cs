@@ -21,7 +21,6 @@ namespace smart_task_manager.Controllers
             _userManager = userManager;
         }
         //Get : get all tasks
-        [Authorize(Roles = "Manager,User")]
         [HttpGet]
         public async Task<IActionResult> GetAllTasks()
         {
@@ -36,7 +35,6 @@ namespace smart_task_manager.Controllers
             if (task == null) return NotFound();
             return Ok(task);
         }
-        [Authorize(Roles = "Manager,User")]
         [HttpPost]
         public async Task<IActionResult> CreateTask([FromBody] CreateTaskDto dto)
         {
@@ -61,36 +59,34 @@ namespace smart_task_manager.Controllers
             return Ok(newTask);
         }
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTask(string Id)
-        {    // find the task first
-            var task = await _taskService.GetTaskById(Id);
-            if (task == null) return NotFound();
-            var result = await _taskService.DeleteTask(Id);
+        public async Task<IActionResult> DeleteTask(string id)
+        {   
+            var result = await _taskService.DeleteTask(id);
             if (result)
             {
                 // Return 200 OK with success message
-                return Ok($"Task with ID {Id} was deleted successfully.");
+                return Ok($"Task with ID {id} was deleted successfully.");
             }
             else
             {
                 // Return 400 Bad Request if something went wrong
-                return BadRequest($"Failed to delete task with ID {Id}.");
+                return BadRequest($"Failed to delete task with ID {id}.");
             }
         }
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTask( TaskItem task , string Id)
-        { var existing = await _taskService.GetTaskById(Id);
+        public async Task<IActionResult> UpdateTask( TaskItem task , string id)
+        { var existing = await _taskService.GetTaskById(id);
             if (existing == null) return NotFound();
-            var result = await _taskService.UpdateTask(task, Id);
+            var result = await _taskService.UpdateTask(task, id);
             if (result)
             {
                 // Return 200 OK with success message
-                return Ok($"Task with ID {Id} was updated successfully.");
+                return Ok($"Task with ID {id} was updated successfully.");
             }
             else
             {
                 // Return 400 Bad Request if something went wrong
-                return BadRequest($"Failed to update task with ID {Id}.");
+                return BadRequest($"Failed to update task with ID {id}.");
             }
         }
     }

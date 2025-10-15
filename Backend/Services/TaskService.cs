@@ -62,7 +62,9 @@ namespace smart_task_manager.Services
 
         public async Task<bool> DeleteTask(string id)
         {
-            var task = await _context.Tasks.FindAsync(id);
+            if (!int.TryParse(id, out int taskId))
+                return false;
+            var task = await _context.Tasks.FindAsync(taskId);
 
             if (task == null)
                 return false;
