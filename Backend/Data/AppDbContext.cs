@@ -10,6 +10,8 @@ namespace smart_task_manager.Data
         public AppDbContext(DbContextOptions<AppDbContext> options):base (options) { }
 
         public DbSet<TaskItem> Tasks { get; set; }
+        public DbSet<Event> Events { get; set; }
+
         public DbSet<Project> Projects { get; set; }
         public DbSet<Notification> Notifications { get; set; }
     }

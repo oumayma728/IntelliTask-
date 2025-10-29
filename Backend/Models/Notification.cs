@@ -2,7 +2,7 @@
 {
     public class Notification
     { public int id { get; set; }
-        public string title { get; set; }
+        public string Title { get; set; }
         public string Message { get; set; }
         public bool IsRead { get; set; } = false;
         public DateTime CreatedAt { get; set; }

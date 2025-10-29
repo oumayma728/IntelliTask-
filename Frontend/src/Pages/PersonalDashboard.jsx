@@ -1,5 +1,5 @@
 import Navbar from "../Components/Navbar"
-import { Sidebar } from "../Components/Sidebar"
+import  Sidebar  from "../Components/Sidebar"
 import Task from "../Pages/Task"
 
 export default function PersonalDashboard() {

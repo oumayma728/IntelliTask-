@@ -8,6 +8,8 @@ import TeamDashboard from "./Pages/TeamDashboard";
 import PersonalDashboard from "./Pages/PersonalDashboard"
 import Home from "./Pages/Home"
 import Task from "./Pages/Task"
+import Calendar from "./Pages/Calendar"
+import Settings from "./Pages/Settings"
 export default function AppRoutes() {
     const { token } = useAuth();
 
@@ -18,7 +20,9 @@ export default function AppRoutes() {
     <Route path="/register" element={<Register />} />
     <Route path="/TeamDashboard" element={<TeamDashboard />} />
     <Route path="/PersonalDashboard" element={<PersonalDashboard />} />
-        <Route path="/Task" element={<Task />} />
+    <Route path="/Task" element={<Task/>}/>
+        <Route path="/Calendar" element={<Calendar/>}/>
+        <Route path="/Settings" element={<Settings/>}/>
 
         
 <Route path="*" element={<Navigate to="/login" />} />

@@ -14,9 +14,9 @@ namespace smart_task_manager.Services
     // 1. INTERFACE (the contract) - separate from the class
     public interface IAuthService
     {
-        Task<IdentityResult> RegisterAsync(string email, string password);  
+        Task<IdentityResult> RegisterAsync(string email, string password);
         Task<LoginResponseDto?> LoginAsync(string email, string password);
-    } 
+    }
 
     // 2. SERVICE CLASS (the implementation) - at same level as interface
     public class AuthService : IAuthService
@@ -33,11 +33,13 @@ namespace smart_task_manager.Services
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _jwtSecret = config["Jwt:Secret"];        }
+            _jwtSecret = config["Jwt:Secret"];
+        }
 
         public async Task<IdentityResult> RegisterAsync(string email, string password)
         {
-            var user = new User {
+            var user = new User
+            {
                 UserName = email,
                 Email = email,          // use the method parameter
                 Role = UserRole.User,
@@ -63,30 +65,51 @@ namespace smart_task_manager.Services
                 Username = user.UserName
             };
         }
-        
-        private string GenerateJwtToken(User user) // ← Changed from IdentityUser to User
+        private string GenerateJwtToken(User user)
         {
+            // Debug: Check the user object
+            Console.WriteLine($"User Id: '{user.Id}'");
+            Console.WriteLine($"User Email: '{user.Email}'");
+            Console.WriteLine($"User Name: '{user.UserName}'");
+
+            if (string.IsNullOrEmpty(user.Id))
+            {
+                throw new ArgumentException("User Id cannot be null or empty");
+            }
+
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_jwtSecret);
 
+            // Create claims with multiple identifier types
+            var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, user.Id), // This is the most important one
+        new Claim("sub", user.Id), // JWT standard subject claim
+        new Claim(ClaimTypes.Email, user.Email),
+        new Claim(ClaimTypes.Name, user.UserName),
+        new Claim(ClaimTypes.Role, user.Role.ToString()),
+        new Claim("userid", user.Id), // Custom claim as backup
+        new Claim("id", user.Id) // Another backup
+    };
+
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id),
-                    new Claim(ClaimTypes.Email, user.Email),
-                    new Claim(ClaimTypes.Name, user.UserName),
-                    new Claim(ClaimTypes.Role, user.Role.ToString())
-
-                }),
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddHours(2),
-                //Claims: little pieces of info about the user (here: their Id and Email).
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-                //SigningCredentials: how we sign it(with the secret key and SHA256 encryption).
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256Signature
+                )
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+
+            // Debug: Check the generated token
+            var generatedToken = tokenHandler.WriteToken(token);
+            Console.WriteLine($"Generated token for user: {user.Email}, ID: {user.Id}");
+
+            return generatedToken;
         }
+
     }
 }

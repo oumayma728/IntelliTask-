@@ -1,17 +1,24 @@
 import api from "./api";
-export const CreateTask = async (task)=>{
-try{
-    const response = await api.post("http://localhost:5000/api/task",{task});
-    return response.data
-}catch(error)
-{
-    console.error("Create Task error:",error.response?.data || error.message);
+export const CreateTask = async (task) => {
+    try {
+        const token = localStorage.getItem('token');
+        console.log("Token exists:", !!token);
+        console.log("Token value:", token);
+        
+        const response = await api.post("http://localhost:5000/api/tasks", task);
+        console.log('Task created successfully', response.data);
+        return response.data;
+    } catch(error) {
+        console.error("Create Task error:", error.response?.data || error.message);
+        console.error("Response status:", error.response?.status);
         throw error;
-}
+    }
 }
 export const GetAllTasks =async()=>{
     try{
-        const response = await api.get("http://localhost:5000/api/task")
+        console.log("test")
+        const response = await api.get("http://localhost:5000/api/tasks")
+        console.log(response)
         return response.data
     }catch(error)
     {
@@ -20,7 +27,7 @@ export const GetAllTasks =async()=>{
 }}
 export const GetTaskById = async(id)=>{
     try{
-        const response = await api.get(`http://localhost:5000/api/task/${id}`)
+        const response = await api.get(`http://localhost:5000/api/tasks/${id}`)
         return response.data
     }catch(error)
     {
@@ -29,9 +36,11 @@ export const GetTaskById = async(id)=>{
 
     }
 }
-export const DeleteTask =async(id)=>{
+export const DeleteTask =async(Id)=>{
     try{
-        const response =await api.delete(`http://localhost:5000/api/task/${id}`)
+        console.log("Deleting task with ID:", Id);
+        const response =await api.delete(`http://localhost:5000/api/tasks/${Id}`)
+ console.log("Delete response:", response.data);
         return response.data
     }catch(error)
     {

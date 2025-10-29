@@ -1,11 +1,14 @@
 import { FaSearch, FaFilter, FaAngleDoubleDown, FaTable } from "react-icons/fa";
 import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import useTasks from "../hooks/useTasks";
+import Calendar from "../Pages/Calendar";
 
 export default function TaskToolbar() {
 const {tasks:initialTasks,addTask} =useTasks();
 const [tasks,setTasks] =useState([]);
 const [editingRow ,setEditingRow] =useState(null);
+const navigate =useNavigate();
   useEffect(() => {
     setTasks(initialTasks);
   }, [initialTasks]);
@@ -34,7 +37,13 @@ const [editingRow ,setEditingRow] =useState(null);
       <div className="flex items-center px-8 space-x-8 border-b border-gray-700 pb-2">
         <button className="border-b-2 border-blue-500 pb-2 text-white font-medium">Table</button>
         <button className="text-gray-400 hover:text-white pb-2">Kanban</button>
-        <button className="text-gray-400 hover:text-white pb-2">Calendar</button>
+        <Link
+  to="/calendar"
+  className="text-gray-400 hover:text-white pb-2"
+>
+  Calendar
+</Link>
+
         <button className="text-gray-400 hover:text-white pb-2 text-xl font-bold">+</button>
       </div>
 

@@ -1,8 +1,32 @@
-import { useState } from "react";
+import { useState ,useRef,useEffect} from "react";
 import { useAuth } from "../Context/AuthContext";
 export default function Navbar(){
     const [showNotifications , setShowNotifications]=useState(false);
 const{user} =useAuth();
+const [profileImage, setProfileImage] = useState(null);
+ const fileInputRef = useRef(null); 
+  
+const handleImageChange=(e)=>{
+    const file = e.target.files[0];
+    if (file){
+        //for temporary image :const imageUrl = URL.createObjectURL(file);
+        //setProfileImage(imageUrl);
+        //localStorage.setItem("image",imageUrl)
+        const reader = new FileReader();//browser tool to read files.
+        reader.onload=()=>{ //runs after the conversion is done.
+            const base64String = reader.result; // the image as a string
+            setProfileImage(base64String);/// show it immediately
+            localStorage.setItem("profileImage",base64String); //save it 
+        };
+        reader.readAsDataURL(file);//converts the file into a Base64 string.
+
+    }
+
+};
+ useEffect(() => {
+    const savedImage = localStorage.getItem("profileImage");
+    if (savedImage) setProfileImage(savedImage);
+  }, []);
 
 console.log("User from context:", user);
 
@@ -40,10 +64,17 @@ console.log("User name:", user?.token?.username);
         <div className="flex items-center space-x-4">
         <span className="font-medium text-gray-200">{user?.username ||"Guest"}</span>
         <img
-        src="" 
+        src={profileImage || "https://via.placeholder.com/40"}
         alt="Profile"
         className="w-10 h-10 rounded-full"
+          onClick={() => fileInputRef.current && fileInputRef.current.click()} // use ref
         />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="hidden"></input>
         </div>
     </div>
     </div>

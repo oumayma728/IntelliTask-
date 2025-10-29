@@ -38,7 +38,10 @@ public class DeadlineCheckerService : BackgroundService
                     {
                         UserId = task.UserId,
                         Message = $"Reminder: Task '{task.Title}' is due soon!",
-                        TaskId = task.Id
+                        TaskId = task.Id,
+                        Title = $"Due Soon: {task.Title}",
+                        CreatedAt = DateTime.UtcNow, 
+                        IsRead = false 
                     }); 
 
                 }

@@ -53,8 +53,8 @@ namespace smart_task_manager.Services
             {
                 UserId = userId,
                 ProjectId = project.Id,
-                title = $"New project Created: {project.Name}", // ? Add this
-                Message = $"project '{project.Name}' has been created",
+                Title = $"New Project Created: {project.Name?? "Untitled"}",
+                Message = $"Project '{project.Name ?? "Untitled"}' has been created",
                 CreatedAt = DateTime.Now,
                 IsRead = false
             };

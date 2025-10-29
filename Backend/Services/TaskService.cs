@@ -9,7 +9,7 @@ namespace smart_task_manager.Services
         Task<List<TaskItem>> GetAll();
         Task<TaskItem?> GetTaskById(string id);
         Task<TaskItem?> CreateTask(TaskItem task, string userId);
-        Task<bool> DeleteTask(string id);
+        Task<bool> DeleteTask(int id);
         Task<bool> UpdateTask(TaskItem updatedTask, string userId);
     }
 
@@ -49,8 +49,8 @@ namespace smart_task_manager.Services
             {
                 UserId = userId,
                 TaskId = task.Id,
-                title = $"New Task Created: {task.Title}", // ✅ Add this
-                Message = $"Task '{task.Title}' has been created",
+                Title = $"New Task Created: {task.Title ?? "Untitled"}",
+                Message = $"Task '{task.Title ?? "Untitled"}' has been created",
                 CreatedAt = DateTime.Now,
                 IsRead = false
             };
@@ -60,17 +60,22 @@ namespace smart_task_manager.Services
             return task;
         }
 
-        public async Task<bool> DeleteTask(string id)
+        public async Task<bool> DeleteTask(int id)
         {
-            if (!int.TryParse(id, out int taskId))
-                return false;
-            var task = await _context.Tasks.FindAsync(taskId);
-
+            var task = await _context.Tasks.FindAsync(id);
             if (task == null)
+            {
                 return false;
+            }
 
+            // Delete related notifications first
+            var relatedNotifications = _context.Notifications.Where(n => n.TaskId == id);
+            _context.Notifications.RemoveRange(relatedNotifications);
+
+            // Now delete the task
             _context.Tasks.Remove(task);
             await _context.SaveChangesAsync();
+
             return true;
         }
 

@@ -35,31 +35,28 @@ namespace smart_task_manager.Controllers
             if (task == null) return NotFound();
             return Ok(task);
         }
+     
         [HttpPost]
-        public async Task<IActionResult> CreateTask([FromBody] CreateTaskDto dto)
+         public async Task<IActionResult> CreateTask([FromBody] CreateTaskDto dto)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        
+
+        var task = new TaskItem
         {
-            // Get user ID from claims/token
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ;
+            Title = dto.Title,
+            DueDate = dto.DueDate,
+            ProjectName = dto.ProjectName,
+            Description = dto.Description,
+            Status = dto.Status
+        };
 
-            if (string.IsNullOrEmpty(userId))
-             {
-                 return Unauthorized("User not authenticated");
-             }
-            // Map DTO to TaskItem entity
-            var task = new TaskItem
-            {
-                Title = dto.Title,
-                DueDate = dto.DueDate,
-                ProjectName = dto.ProjectName,
-                Description = dto.Description,
-                Status = dto.Status
-            };
-
-            var newTask = await _taskService.CreateTask(task, userId);
-            return Ok(newTask);
-        }
+        var newTask = await _taskService.CreateTask(task, userId);
+        return Ok(newTask);
+    }
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTask(string id)
+        public async Task<IActionResult> DeleteTask(int id)
         {   
             var result = await _taskService.DeleteTask(id);
             if (result)

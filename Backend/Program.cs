@@ -31,6 +31,8 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<IEventService, EventService>();
+
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddHostedService<DeadlineCheckerService>();
 builder.Services.AddCors(options =>
@@ -51,21 +53,28 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; //means “if the token is missing or invalid, return 401 Unauthorized.
 })
 .AddJwtBearer(options =>
- {//set rules for how to validate JWT tokens
-     options.TokenValidationParameters = new TokenValidationParameters
-     {
-         ValidateIssuerSigningKey = true, //check if the token’s signature was made using the correct secret key.
-         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Secret"])
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"])
         ),
-         ValidateIssuer = false,
-         ValidateAudience = false
-     };
- });
+        ValidateIssuer = true, // Change to true
+        ValidateAudience = true, // Change to true
+        ValidIssuer = builder.Configuration["Jwt:Issuer"], // Add this
+        ValidAudience = builder.Configuration["Jwt:Audience"], // Add this
+        ValidateLifetime = true, // Add this to validate expiration
+        ClockSkew = TimeSpan.Zero // Optional: remove time tolerance
+    };
+});
 
-
-builder.Services.AddControllers();
-
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Keep PascalCase in JSON responses
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    });
 var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -78,7 +87,7 @@ app.UseCors("AllowFrontend");
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication(); // ← THIS MUST COME BEFORE UseAuthorization()
+app.UseAuthentication(); 
 app.UseAuthorization();
 
 app.MapControllers();

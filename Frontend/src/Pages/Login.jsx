@@ -9,6 +9,7 @@ import { googleLogout } from "@react-oauth/google";
 export default function Login (){
     const [email, SetEmail] = useState("");
     const [password , SetPassword] = useState("");
+    const [Error,setError]=useState("");
     //useAuth() returns values/functions from your authentication context.
     const { setUser, setToken, setMode } = useAuth();
     const navigate = useNavigate(); 
@@ -16,34 +17,36 @@ export default function Login (){
 const handleSubmit =async(e)=>{
     //stops the form from refreshing the whole page
     e.preventDefault();
+    setError(""); 
     try{
         const data = await login (email, password);
         if (!data || !data.token) {
         alert("Login failed: No token received");
+        
         return;
     }
     console.log("API response:", data);
-        console.log("mode:", data.token.mode);
+        console.log("mode:", data.token.Mode);
 
 
         //updates context with the token.
-        setToken(data.token.token);
+        setToken(data.token.Token);
         //saves the logged-in user’s details in context.
 setUser({ email: data.token.email, username: data.token.username });
         //sets user’s role
-        setMode(data.token.mode);    
+        setMode(data.token.Mode);    
         //saves the token in the browser so the user stays logged in even after refresh.
-        localStorage.setItem("token", data.token.token);
+        localStorage.setItem("token", data.token.Token);
         localStorage.setItem('user', JSON.stringify(data));
-        localStorage.setItem("mode", data.token.mode);
+        localStorage.setItem("mode", data.token.Mode);
+        console.log("Token saved:", localStorage.getItem('token'));
 
-
-        if (data.token.mode === "personal") {
+        if (data.token.Mode === "personal") {
             console.log("Navigating to PersonalDashboard");
             navigate("/PersonalDashboard");
             alert("login successful")
             alert("Welcome to your personal dashboard");
-        } else if (data.token.mode === "Team") {
+        } else if (data.token.Mode === "Team") {
             console.log("Navigating to TeamDashboard");
             navigate("/TeamDashboard");
             alert("login successful")
@@ -56,7 +59,7 @@ setUser({ email: data.token.email, username: data.token.username });
     }
     catch (err)
     {
-        alert("Login failed")
+        alert(err.response?.data)
     }
 };
 const googleLogin  =useGoogleLogin({
@@ -82,7 +85,7 @@ return (
     />
     Sign in with Google
 </button>
-    <form className="flex flex-col gap-5"onSubmit={handleSubmit}>
+    <form className="flex flex-col  py-4 gap-5"onSubmit={handleSubmit}>
         <input value={email} 
         onChange={e=>SetEmail(e.target.value)} 
         placeholder="Email"

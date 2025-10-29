@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
+import { GetAllTasks, CreateTask, DeleteTask, UpdateTask } from "../api/TaskApi";
 
 export default function useTasks() {
-  const [tid, setTid] = useState("");
   const [tasks, setTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -11,18 +11,7 @@ export default function useTasks() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch("http://localhost:5000/api/tasks", {
-        mode: "cors",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      });
-
-      if (!response.ok) throw new Error("Network response was not ok");
-
-      const data = await response.json();
-      console.log("Fetched tasks:", data);
+      const data = await GetAllTasks();
       setTasks(data);
     } catch (err) {
       setError(err.message);
@@ -32,57 +21,47 @@ export default function useTasks() {
     }
   }, []);
 
-  // 🟢 Add task
-  const addTask = async (payload) => {
-    try {
-      const response = await fetch("http://localhost:5000/api/tasks", {
-        method: "POST",
-        body: JSON.stringify(payload),
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-        },
-      });
+  // Add task
+ const addTask = async (task) => {
+  try {
+    const newTask = await CreateTask(task);
+    setTasks((prev) => [...prev, newTask]);
+    return newTask; 
+  } catch (err) {
+    setError(err.message);
+    throw err;   
+  }
+};
 
-      if (!response.ok) throw new Error("Add failed");
-
-      const newTask = await response.json();
-      // Update tasks in state
-      setTasks((prev) => [...prev, newTask]);
-      console.log("Task added successfully:", newTask);
-    } catch (err) {
-      console.error("Error adding task:", err);
-      alert("Failed to add task.");
-    }
-  };
-
-  // 🟢 Delete task
+  // Delete task
   const deleteTask = async (taskId) => {
-    try {
-      const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
-        method: "DELETE",
-      });
+    try { 
 
-      if (!response.ok) throw new Error("Delete failed");
-
-      // Update state locally (no need to refetch)
-      setTasks((prev) => prev.filter((task) => task.id !== taskId));
-      console.log("Task deleted successfully");
-    } catch (err) {
-      console.error("Error deleting task:", err);
-      alert("Failed to delete task.");
+      await DeleteTask(taskId);
+      setTasks((prev) => prev.filter((t) => t._id !== taskId));
+    }catch(err)
+    {
+      setError(err.message);
     }
   };
-
-  // ✅ Return everything you need
+//update task
+const updatedTaskById = async (taskId , updatedtask)=>{
+  try{
+    const updated = await UpdateTask(taskId,updatedtask);
+    setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? updated : t))
+      );
+    } catch (err) {
+      setError(err.message);
+    }
+  };
   return {
-    tid,
-    setTid,
     tasks,
     isLoading,
     error,
     fetchTasks,
     addTask,
     deleteTask,
+    updatedTaskById
   };
 }

@@ -4,7 +4,9 @@ export const login = async (Email, Password) =>{
     try{
         const response = await api.post("http://localhost:5000/api/auth/login" , {Email, Password});
         // response.data should contain { token, mode, email, username } from backend
+        console.log("test done");
         return response.data;
+        
     }catch (error)
     {
         console.error("Login error:",error.response?.data || error.message);
