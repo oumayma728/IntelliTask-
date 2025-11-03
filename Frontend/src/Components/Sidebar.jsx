@@ -15,7 +15,7 @@ export default function Sidebar() {
   const [open, setOpen] = useState(true);
 const location = useLocation();
   const menuItems = [
-    { icon: <FaHome size={20} />, label: 'Home' ,path:'/'},
+    { icon: <FaHome size={20} />, label: 'Home' ,path:'/home'},
     { icon: <FaTasks size={20} />, label: 'Tasks' ,path:'/Task'},
     { icon: <FaCalendarAlt size={20} />, label: 'Calendar' , path:'/Calendar' },
     { icon: <FaCog size={20} />, label: 'Settings' },
@@ -28,10 +28,23 @@ const location = useLocation();
 
   return (
     <nav
-      className={`shadow-md bg-gray-800 p-2 flex flex-col transition-all duration-300
-        ${open ? 'w-60' : 'w-20'} 
-        h-[calc(100vh-64px)] overflow-y-auto`}
-    >
+      className={`
+  bg-gray-900 
+  text-white 
+  shadow-xl 
+  flex flex-col 
+  justify-between
+  transition-all duration-300 
+  ${open ? 'w-64' : 'w-12'}
+  h-screen 
+  py-6 
+  px-3 
+  overflow-y-auto 
+  border-r border-gray-700
+  no-scrollbar
+`}
+>
+
       {/* Header */}
       <div className="flex items-center justify-between border-b border-white/20 pb-3 mb-5">
   <img
@@ -52,22 +65,30 @@ const location = useLocation();
         {menuItems.map((item, index) => (
           <li
   key={index}
-  className="group relative flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-700 cursor-pointer duration-300"
+  className={`
+    group relative flex items-center gap-3 
+    px-3 py-2 mb-1
+    rounded-lg cursor-pointer  
+    transition-all duration-200 
+    ${location.pathname === item.path ? "bg-blue-600" : "hover:bg-gray-800"}
+  `}
 >
+
   <Link to={item.path} className="flex items-center gap-3 w-full">
     <div className="text-white">{item.icon}</div>
-    <p
-      className={`text-white text-sm whitespace-nowrap transition-all duration-300 ${
-        open ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2 w-0 hidden"
-      }`}
-    >
-      {item.label}
-    </p>
+   <p
+  className={`
+    text-sm whitespace-nowrap transition-all duration-200
+    ${open ? "opacity-100" : "opacity-0 w-0 overflow-hidden"}
+  `}
+>
+  {item.label}
+</p>
   </Link>
             {!open && (
-             <div className="absolute left-16 bg-gray-900 text-white text-sm px-3 py-1 rounded-md shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-300">
-      {item.label}
-    </div>
+  <div className="absolute left-14 bg-gray-900 text-white text-xs px-3 py-1 rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition duration-300">
+    {item.label}
+  </div>
 
             )}
           </li>
@@ -75,11 +96,11 @@ const location = useLocation();
       </ul>
 
       {/* Footer */}
-      <div className="flex items-center gap-3 px-3 py-3 border-t border-white/30">
-  <FaUserCircle size={30} className="text-white" />
+      <div className="flex items-center gap-3 px-3 py-5  border-t border-gray-700 mb-16">
+  <FaUserCircle size={30} className="text-gray-300" />
   <div className={`transition-all duration-300 overflow-hidden text-gray-100 ${open ? 'opacity-100' : 'opacity-0 w-0'}`}>
     <p className="font-medium">{user?.username}</p>
-    <span className="text-xs text-gray-200">{user?.email}</span>
+    <span className="text-xs text-gray-400">{user?.email}</span>
   </div>
 </div>
 

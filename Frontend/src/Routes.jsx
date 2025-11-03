@@ -25,7 +25,7 @@ export default function AppRoutes() {
         <Route path="/Settings" element={<Settings/>}/>
 
         
-<Route path="*" element={<Navigate to="/login" />} />
+<Route path="*" element={<Navigate to="/Home" />} />
     </Routes>
 );
 }
