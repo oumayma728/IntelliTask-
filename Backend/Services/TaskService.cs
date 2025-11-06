@@ -7,10 +7,10 @@ namespace smart_task_manager.Services
     public interface ITaskService
     {
         Task<List<TaskItem>> GetAll();
-        Task<TaskItem?> GetTaskById(string id);
+        Task<TaskItem?> GetTaskById(int Id);
         Task<TaskItem?> CreateTask(TaskItem task, string userId);
-        Task<bool> DeleteTask(int id);
-        Task<bool> UpdateTask(TaskItem updatedTask, string userId);
+        Task<bool> DeleteTask(int Id);
+        Task<bool> UpdateTask(TaskItem updatedTask, int id);
     }
 
     // 2. SERVICE CLASS (the implementation)
@@ -32,9 +32,9 @@ namespace smart_task_manager.Services
             return await _context.Tasks.ToListAsync();
         }
 
-        public async Task<TaskItem?> GetTaskById(string id)
+        public async Task<TaskItem?> GetTaskById(int Id)
         {
-            return await _context.Tasks.FindAsync(id);
+            return await _context.Tasks.FindAsync(Id);
         }
 
         public async Task<TaskItem?> CreateTask(TaskItem task, string userId)
@@ -45,7 +45,7 @@ namespace smart_task_manager.Services
             _context.Tasks.Add(task);
             await _context.SaveChangesAsync();
 
-            var notification = new Notification
+            /*var notification = new Notification
             {
                 UserId = userId,
                 TaskId = task.Id,
@@ -56,20 +56,20 @@ namespace smart_task_manager.Services
             };
             // Create a notification for this task
             await _notificationService.CreateNotification(notification);
-
+            */
             return task;
         }
 
-        public async Task<bool> DeleteTask(int id)
+        public async Task<bool> DeleteTask(int Id)
         {
-            var task = await _context.Tasks.FindAsync(id);
+            var task = await _context.Tasks.FindAsync(Id);
             if (task == null)
             {
                 return false;
             }
 
             // Delete related notifications first
-            var relatedNotifications = _context.Notifications.Where(n => n.TaskId == id);
+            var relatedNotifications = _context.Notifications.Where(n => n.TaskId == Id);
             _context.Notifications.RemoveRange(relatedNotifications);
 
             // Now delete the task
@@ -79,9 +79,9 @@ namespace smart_task_manager.Services
             return true;
         }
 
-        public async Task<bool> UpdateTask(TaskItem updatedTask, string userId)
+        public async Task<bool> UpdateTask(TaskItem updatedTask, int id)
         {//check if the task exists.
-            var existingTask = await _context.Tasks.FindAsync(updatedTask.Id);
+            var existingTask = await _context.Tasks.FindAsync(id);
 
             if (existingTask == null)
                 return false;
@@ -99,7 +99,7 @@ namespace smart_task_manager.Services
             _context.Tasks.Update(existingTask);
             await _context.SaveChangesAsync();
 
-            // Send notification if status or due date changed
+            /* Send notification if status or due date changed
             if (statusChanged || dueDateChanged)
             {
                 await _notificationService.CreateNotification(new Notification
@@ -110,7 +110,7 @@ namespace smart_task_manager.Services
                               $"{(dueDateChanged ? $"Due date changed to {existingTask.DueDate:yyyy-MM-dd}." : "")}",
                     TaskId = existingTask.Id
                 });
-            }
+            }*/
 
             return true;
         }

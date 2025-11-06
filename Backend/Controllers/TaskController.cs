@@ -29,13 +29,14 @@ namespace smart_task_manager.Controllers
 
         }
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetTasksById(string Id)
-        {  
-            var task = await _taskService.GetTaskById(Id);
+        public async Task<IActionResult> GetTasksById(int id)
+        {
+            var task = await _taskService.GetTaskById(id);
             if (task == null) return NotFound();
             return Ok(task);
         }
-     
+
+
         [HttpPost]
          public async Task<IActionResult> CreateTask([FromBody] CreateTaskDto dto)
     {
@@ -71,21 +72,20 @@ namespace smart_task_manager.Controllers
             }
         }
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTask( TaskItem task , string id)
-        { var existing = await _taskService.GetTaskById(id);
-            if (existing == null) return NotFound();
+        public async Task<IActionResult> UpdateTask(int id, [FromBody] TaskItem task)
+        {
+            var existing = await _taskService.GetTaskById(id);
+            if (existing == null)
+                return NotFound($"Task with ID {id} not found.");
+
             var result = await _taskService.UpdateTask(task, id);
+
             if (result)
-            {
-                // Return 200 OK with success message
                 return Ok($"Task with ID {id} was updated successfully.");
-            }
             else
-            {
-                // Return 400 Bad Request if something went wrong
                 return BadRequest($"Failed to update task with ID {id}.");
-            }
         }
+
     }
 }
 
