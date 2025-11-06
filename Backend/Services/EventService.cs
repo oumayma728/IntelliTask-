@@ -7,10 +7,10 @@ namespace smart_task_manager.Services
     public interface IEventService
     {
         Task<List<Event>> GetAll();
-        Task<Event?> GetEventById(string id);
+        Task<Event?> GetEventById(int id);
         Task<Event?> CreateEvent(Event ev, string userId);
-        Task<bool> DeleteEvent(string id);
-        Task<bool> UpdateEvent(Event updatedEvent, string id);
+        Task<bool> DeleteEvent(int id);
+        Task<bool> UpdateEvent(Event updatedEvent, int id);
     }
 
     // ✅ IMPLEMENTATION CLASS
@@ -32,7 +32,7 @@ namespace smart_task_manager.Services
         }
 
         // ✅ GET event by ID
-        public async Task<Event?> GetEventById(string id)
+        public async Task<Event?> GetEventById(int id)
         {
             return await _context.Events.FindAsync(id);
         }
@@ -59,8 +59,7 @@ namespace smart_task_manager.Services
             return ev;
         }
 
-        // ✅ DELETE event
-        public async Task<bool> DeleteEvent(string id)
+        public async Task<bool> DeleteEvent(int id)
         {
             var existingEvent = await _context.Events.FindAsync(id);
             if (existingEvent == null)
@@ -79,7 +78,7 @@ namespace smart_task_manager.Services
         }
 
         // ✅ UPDATE event
-        public async Task<bool> UpdateEvent(Event updatedEvent, string id)
+        public async Task<bool> UpdateEvent(Event updatedEvent, int id)
         {
             var existingEvent = await _context.Events.FindAsync(id);
             if (existingEvent == null)

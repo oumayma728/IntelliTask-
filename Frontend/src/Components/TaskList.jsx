@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import {  FaTable } from "react-icons/fa";
 import useTasks from "../hooks/useTasks";
+import { useNavigate } from "react-router-dom";
+
 
 export default function Tasks() {
   const { tasks, fetchTasks, addTask, deleteTask } = useTasks();
@@ -8,7 +10,7 @@ export default function Tasks() {
   const [tasksState, setTasksState] = useState([]);
   const [editingRow, setEditingRow] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
-
+const navigate = useNavigate();
   useEffect(() => {
     console.log("Fetching tasks...");
     fetchTasks();
@@ -100,7 +102,7 @@ export default function Tasks() {
         <div className="flex items-center px-8 space-x-8 border-b border-gray-700 pb-2">
           <button className="border-b-2 border-blue-500 pb-2 text-white font-medium">Table</button>
           <button className="text-gray-400 hover:text-white pb-2">Kanban</button>
-          <button className="text-gray-400 hover:text-white pb-2">Calendar</button>
+          <button onClick={() => navigate("/Calendar")}  className="text-gray-400 hover:text-white pb-2">Calendar</button>
           <button className="text-gray-400 hover:text-white pb-2 text-xl font-bold">+</button>
         </div>
 
@@ -127,6 +129,8 @@ export default function Tasks() {
               <option value="all">All</option>
               <option value="Open">Open</option>
               <option value="Completed">Completed</option>
+              <option value="Uncomplete">Uncomplete</option>
+
             </select>
           </div>
         </div>

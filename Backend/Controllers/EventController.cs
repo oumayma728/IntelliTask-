@@ -32,7 +32,7 @@ namespace smart_task_manager.Controllers
 
         // ✅ GET: /api/events/{id}
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetEventById(string id)
+        public async Task<IActionResult> GetEventById(int id)
         {
             var ev = await _eventService.GetEventById(id);
             if (ev == null)
@@ -65,7 +65,7 @@ namespace smart_task_manager.Controllers
 
         // ✅ PUT: /api/events/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateEvent(string id, [FromBody] Event updatedEvent)
+        public async Task<IActionResult> UpdateEvent(int id, [FromBody] Event updatedEvent)
         {
             if (updatedEvent == null)
                 return BadRequest("Invalid event data.");
@@ -81,9 +81,9 @@ namespace smart_task_manager.Controllers
             return Ok(new { message = $"Event with ID {id} was updated successfully." });
         }
 
-        // ✅ DELETE: /api/events/{id}
+
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteEvent(string id)
+        public async Task<IActionResult> DeleteEvent(int id)
         {
             var result = await _eventService.DeleteEvent(id);
             if (!result)
