@@ -1,8 +1,7 @@
 import { useState } from "react";
 import {login} from "../api/AuthApi";
-import {useAuth} from "../Context/AuthContext"
+import {useAuth } from "../Context/AuthContext"
 import { Link, useNavigate } from "react-router-dom"; // ✅ useNavigate instead of Navigate
-import register from "./Register";
 import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
 import {jwtDecode} from "jwt-decode";
 import { googleLogout } from "@react-oauth/google";
@@ -11,7 +10,7 @@ export default function Login (){
     const [password , SetPassword] = useState("");
     const [Error,setError]=useState("");
     //useAuth() returns values/functions from your authentication context.
-    const { setUser, setToken, setMode } = useAuth();
+    const { setUser, setToken, setMode , loginUser } = useAuth();
     const navigate = useNavigate(); 
 
 const handleSubmit =async(e)=>{
@@ -28,17 +27,9 @@ const handleSubmit =async(e)=>{
     console.log("API response:", data);
         console.log("mode:", data.token.Mode);
 
+loginUser(data.token);
 
-        //updates context with the token.
-        setToken(data.token.Token);
-        //saves the logged-in user’s details in context.
-setUser({ email: data.token.email, username: data.token.username });
-        //sets user’s role
-        setMode(data.token.Mode);    
-        //saves the token in the browser so the user stays logged in even after refresh.
-        localStorage.setItem("token", data.token.Token);
-        localStorage.setItem('user', JSON.stringify(data));
-        localStorage.setItem("mode", data.token.Mode);
+ 
         console.log("Token saved:", localStorage.getItem('token'));
 
         if (data.token.Mode === "personal") {

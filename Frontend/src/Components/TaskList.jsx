@@ -3,35 +3,93 @@ import {  FaTable } from "react-icons/fa";
 import useTasks from "../hooks/useTasks";
 import { useNavigate } from "react-router-dom";
 
-
 export default function Tasks() {
   const { tasks, fetchTasks, addTask, deleteTask } = useTasks();
   const [searchTerm, setSearchTerm] = useState("");
   const [tasksState, setTasksState] = useState([]);
-  const [editingRow, setEditingRow] = useState(null);
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [projectsState, setProjectsState] = useState([]);//used when adding new projects
+
+  const [editingRow, setEditingRow] = useState(null); //keeps track of which task is being edited
+  const [statusFilter, setStatusFilter] = useState("all"); //stores the selected filter
+  //tracks which projects are open or closed
+
+  const [ExpandedProjects , setExpandedProjects]=useState({});
 const navigate = useNavigate();
-  useEffect(() => {
+  //fetches tasks
+useEffect(() => {
     console.log("Fetching tasks...");
     fetchTasks();
   }, [fetchTasks]);
 
   useEffect(() => {
+    //Update the local tasks state with the fetched tasks
     setTasksState(tasks);
+    //Get all unique project names from tasks
+    const projects = [...new Set(tasks.map(task=>task.ProjectName))];
+    //create empty object to stre projects 
+    const initialExpanded ={};
+    //Set all projects to be expanded (open) by default
+    projects.forEach(project =>{
+      initialExpanded[project] =true;
+    })
+    setExpandedProjects(initialExpanded);
   }, [tasks]);
+  //Groups tasks by their project name
+const groupTasksByProject = (tasks)=>{
+  const grouped ={};
+  tasks.forEach(task =>{
+      const projectName = task.ProjectName || "Uncategorized";
+      if (!grouped[projectName]){
+        grouped[projectName]=[];
+      }
+      grouped[projectName].push(task);
+  });
+  return grouped;
+}
+const toggleProject = (projectName)=>{
+  setExpandedProjects(prev =>({
+    ...prev,
+    [projectName]: !prev[projectName]
+  }));
+};
+const toggleAllProjects = () => {
+    const allExpanded = Object.values(ExpandedProjects).every(val => val);
+    const newExpanded = {};
+    Object.keys(ExpandedProjects).forEach(project => {
+      newExpanded[project] = !allExpanded;
+    });
+    setExpandedProjects(newExpanded);
+  };
 
-  const handleNewTask = () => {
+
+
+
+const handleNewTask = () => {
     const newTask = {
       Id: Date.now(),
       Title: "",
       Description: "",
       DueDate: "",
       ProjectName: "",
-      Status: "Open",
+      Status: "ToDo",
       isNew: true
     };
     setTasksState([newTask, ...tasksState]);
     setEditingRow(newTask.Id);
+  };
+  const handleNewProject = () => {
+    const newProjectTask = {
+       Id: `project-${Date.now()}`,
+      Title: "New Project", 
+      Description: "",
+      DueDate: "",
+      ProjectName: "New Project",
+      Status: "ToDo",
+      isNew: true,
+      isProjectHeader: true
+    };
+    setProjectsState([newProjectTask, ...projectsState]);
+    setEditingRow(newProjectTask.Id);
   };
 
  const handleChange = (Id, field, value) => {
@@ -52,9 +110,7 @@ const navigate = useNavigate();
   ProjectName: task.ProjectName,
   Status: task.Status,
 });
-
-
-        if (savedTask && savedTask.Id) {
+  if (savedTask && savedTask.Id) {
           setTasksState(tasksState.map(t => t.Id === task.Id ? { ...savedTask, isNew: false } : t));
           setEditingRow(null);
         }
@@ -82,7 +138,29 @@ const navigate = useNavigate();
     return date.toLocaleDateString();
   };
 
+  const getStatusDisplayText = (status)=>{
+    switch (status) {
+      case "ToDo": return "To Do";
+      case "InProgress": return "In Progress"; 
+    case "Done": return "Done";
+
+      default:return status;
+    }
+  };
+  const getStatusColor = (status) => {
+  switch(status) {
+    case "To Do": return "bg-blue-600";
+    case "In Progress": return "bg-yellow-600";
+    case "Done": return "bg-green-600";      
+    default: return "bg-gray-600";            
+  }
+};
+
+
+
+
   const filteredTasks = tasksState.filter((task) => {
+      console.log(task.Status, statusFilter); 
     const matchesStatus = statusFilter === "all" || task.Status === statusFilter;
     const matchesSearch =
       !searchTerm ||
@@ -91,6 +169,7 @@ const navigate = useNavigate();
       (task.ProjectName && task.ProjectName.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesStatus && matchesSearch;
   });
+  const groupedTasks = groupTasksByProject(filteredTasks);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col justify-start p-8">
@@ -101,7 +180,7 @@ const navigate = useNavigate();
 
         <div className="flex items-center px-8 space-x-8 border-b border-gray-700 pb-2">
           <button className="border-b-2 border-blue-500 pb-2 text-white font-medium">Table</button>
-          <button className="text-gray-400 hover:text-white pb-2">Kanban</button>
+          <button onClick={() => navigate("/KanbanBoard")}  className="text-gray-400 hover:text-white pb-2">Kanban</button>
           <button onClick={() => navigate("/Calendar")}  className="text-gray-400 hover:text-white pb-2">Calendar</button>
           <button className="text-gray-400 hover:text-white pb-2 text-xl font-bold">+</button>
         </div>
@@ -113,6 +192,12 @@ const navigate = useNavigate();
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-md font-medium transition"
             >
               <FaTable /> New Task
+            </button>
+            <button 
+              onClick={handleNewProject} 
+              className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-md font-medium transition"
+            >
+              <FaTable /> New Project
             </button>
             <input
               type="text"
@@ -127,10 +212,9 @@ const navigate = useNavigate();
               className="bg-gray-700 text-white px-3 py-2 rounded"
             >
               <option value="all">All</option>
-              <option value="Open">Open</option>
-              <option value="Completed">Completed</option>
-              <option value="Uncomplete">Uncomplete</option>
-
+              <option value="To Do">To Do</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Done">Done</option>
             </select>
           </div>
         </div>
@@ -148,123 +232,146 @@ const navigate = useNavigate();
           </tr>
         </thead>
         <tbody>
-          {filteredTasks.map((task) => (
-            <tr key={task.Id} className="border-b border-gray-600 hover:bg-gray-800">
-              <td className="px-4 py-2">
-                {editingRow === task.Id ? (
-                  <input
-                    type="text"
-                    value={task.Title || ""}
-                    onChange={(e) => handleChange(task.Id, "Title", e.target.value)}
-                    className="bg-gray-700 text-white px-2 py-1 rounded w-full border border-gray-600"
-                    placeholder="Enter title *"
-                  />
-                ) : (
-                  task.Title || "Untitled"
-                )}
-              </td>
-              <td className="px-4 py-2">
-                {editingRow === task.Id ? (
-                  <input
-                    type="text"
-                    value={task.Description || ""}
-                    onChange={(e) => handleChange(task.Id, "Description", e.target.value)}
-                    className="bg-gray-700 text-white px-2 py-1 rounded w-full border border-gray-600"
-                    placeholder="Enter description *"
-                  />
-                ) : (
-                  task.Description || "No description"
-                )}
-              </td>
-              <td className="px-4 py-2">
-                {editingRow === task.Id ? (
-                  <input
-                    type="date"
-                    value={task.DueDate || ""}
-                    onChange={(e) => handleChange(task.Id, "DueDate", e.target.value)}
-                    className="bg-gray-700 text-white px-2 py-1 rounded border border-gray-600"
-                  />
-                ) : (
-                  formatDate(task.DueDate)
-                )}
-              </td>
-              <td className="px-4 py-2">
-                {editingRow === task.Id ? (
-                  <input
-                    type="text"
-                    value={task.ProjectName || ""}
-                    onChange={(e) => handleChange(task.Id, "ProjectName", e.target.value)}
-                    className="bg-gray-700 text-white px-2 py-1 rounded w-full border border-gray-600"
-                    placeholder="Enter project name *"
-                  />
-                ) : (
-                  task.ProjectName || "No project"
-                )}
-              </td>
-              <td className="px-4 py-2">
-                {editingRow === task.Id ? (
-                  <select
-                    value={task.Status || "Open"}
-                    onChange={(e) => handleChange(task.Id, "Status", e.target.value)}
-                    className="bg-gray-700 text-white px-2 py-1 rounded border border-gray-600"
-                  >
-                    <option value="Open">Open</option>
-                    <option value="Completed">Completed</option>
-                  </select>
-                ) : (
-                  <span className={`px-2 py-1 rounded text-xs ${
-                    task.Status === "Completed" ? "bg-green-600" : "bg-blue-600"
-                  }`}>
-                    {task.Status}
-                  </span>
-                )}
-              </td>
-              <td className="px-4 py-2 flex gap-2">
-                {editingRow === task.Id ? (
-                  <>
-                    <button
-                      onClick={() => handleSave(task)}
-                      className="bg-green-600 hover:bg-green-500 px-3 py-1 rounded text-sm"
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={() => handleCancelEdit(task.Id)}
-                      className="bg-gray-600 hover:bg-gray-500 px-3 py-1 rounded text-sm"
-                    >
-                      Cancel
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => setEditingRow(task.Id)}
-                      className="bg-blue-600 hover:bg-blue-500 px-3 py-1 rounded text-sm"
-                    >
-                      Edit
-                    </button>
-                    <button 
-                      onClick={() =>{ 
-                        deleteTask(task.Id);
-                      }}
-                      
-                      className="bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-sm"
-                    >
-                      Delete
-                    </button>
-                  </>
-                )}
-              </td>
-            </tr>
-          ))}
-          {filteredTasks.length === 0 && (
-            <tr>
-              <td colSpan="6" className="px-4 py-8 text-center text-gray-400">
-                No tasks found. {searchTerm ? "Try changing your search." : "Create your first task!"}
-              </td>
-            </tr>
-          )}
-        </tbody>
+    {/* Loop through projects */}
+
+  {Object.entries(groupedTasks).map(([projectName, projectTasks]) => (
+    <>
+      {/* Project Header Row */}
+      <tr 
+        key={`project-${projectName}`} 
+        className="bg-gray-800 cursor-pointer hover:bg-gray-750"
+        onClick={() => toggleProject(projectName)}
+      >
+        <td colSpan="6" className="px-4 py-3">
+          <div className="flex items-center gap-3">
+            {ExpandedProjects[projectName] ? (
+              <span>▼</span>
+            ) : (
+              <span>▶</span>
+            )}
+            <span className="font-semibold">{projectName}</span>
+            <span className="text-gray-400 text-sm">({projectTasks.length} tasks)</span>
+          </div>
+        </td>
+      </tr>
+      
+      {/* Project Tasks - only show if expanded */}
+      {ExpandedProjects[projectName] && projectTasks.map((task) => (
+        <tr key={task.Id} className="border-b border-gray-600 hover:bg-gray-800">
+          <td className="px-4 py-2">
+            {editingRow === task.Id ? (
+              <input
+                type="text"
+                value={task.Title || ""}
+                onChange={(e) => handleChange(task.Id, "Title", e.target.value)}
+                className="bg-gray-700 text-white px-2 py-1 rounded w-full border border-gray-600"
+                placeholder="Enter title *"
+              />
+            ) : (
+              task.Title || "Untitled"
+            )}
+          </td>
+          <td className="px-4 py-2">
+            {editingRow === task.Id ? (
+              <input
+                type="text"
+                value={task.Description || ""}
+                onChange={(e) => handleChange(task.Id, "Description", e.target.value)}
+                className="bg-gray-700 text-white px-2 py-1 rounded w-full border border-gray-600"
+                placeholder="Enter description *"
+              />
+            ) : (
+              task.Description || "No description"
+            )}
+          </td>
+          <td className="px-4 py-2">
+            {editingRow === task.Id ? (
+              <input
+                type="date"
+                value={task.DueDate || ""}
+                onChange={(e) => handleChange(task.Id, "DueDate", e.target.value)}
+                className="bg-gray-700 text-white px-2 py-1 rounded border border-gray-600"
+              />
+            ) : (
+              formatDate(task.DueDate)
+            )}
+          </td>
+          <td className="px-4 py-2">
+            {editingRow === task.Id ? (
+              <input
+                type="text"
+                value={task.ProjectName || ""}
+                onChange={(e) => handleChange(task.Id, "ProjectName", e.target.value)}
+                className="bg-gray-700 text-white px-2 py-1 rounded w-full border border-gray-600"
+                placeholder="Enter project name *"
+              />
+            ) : (
+              task.ProjectName || "No project"
+            )}
+          </td>
+          <td className="px-4 py-2">
+            {editingRow === task.Id ? (
+              <select
+                value={task.Status}
+                onChange={(e) => handleChange(task.Id, "Status", e.target.value)}
+                className="bg-gray-700 text-white px-2 py-1 rounded border border-gray-600"
+              >
+                <option value="ToDo">To Do</option>
+                <option value="InProgress">In Progress</option>
+                <option value="Done">Done</option>
+              </select>
+            ) : (
+              <span className={`px-2 py-1 rounded text-xs ${getStatusColor(task.Status)}`}>
+                {getStatusDisplayText(task.Status)}
+              </span>
+            )}
+          </td>
+          <td className="px-4 py-2 flex gap-2">
+            {editingRow === task.Id ? (
+              <>
+                <button
+                  onClick={() => handleSave(task)}
+                  className="bg-green-600 hover:bg-green-500 px-3 py-1 rounded text-sm"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => handleCancelEdit(task.Id)}
+                  className="bg-gray-600 hover:bg-gray-500 px-3 py-1 rounded text-sm"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setEditingRow(task.Id)}
+                  className="bg-blue-600 hover:bg-blue-500 px-3 py-1 rounded text-sm"
+                >
+                  Edit
+                </button>
+                <button 
+                  onClick={() => deleteTask(task.Id)}
+                  className="bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-sm"
+                >
+                  Delete
+                </button>
+              </>
+            )}
+          </td>
+        </tr>
+      ))}
+    </>
+  ))}
+  
+  {filteredTasks.length === 0 && (
+    <tr>
+      <td colSpan="6" className="px-4 py-8 text-center text-gray-400">
+        No tasks found. {searchTerm ? "Try changing your search." : "Create your first task!"}
+      </td>
+    </tr>
+  )}
+</tbody>
       </table>
     </div>
   );

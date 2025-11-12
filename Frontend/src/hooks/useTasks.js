@@ -22,46 +22,69 @@ export default function useTasks() {
   }, []);
 
   // Add task
- const addTask = async (task) => {
-  try {
-    const newTask = await CreateTask(task);
-    setTasks((prev) => [...prev, newTask]);
-    return newTask; 
-  } catch (err) {
-    setError(err.message);
-    throw err;   
-  }
-};
+  const addTask = async (task) => {
+    try {
+      const newTask = await CreateTask(task);
+      setTasks((prev) => [...prev, newTask]);
+      return newTask;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
 
   // Delete task
   const deleteTask = async (taskId) => {
-    try { 
+    try {
 
       await DeleteTask(taskId);
-      setTasks((prev) => prev.filter((t) => t._id !== taskId));
-    }catch(err)
-    {
-      setError(err.message);
-    }
-  };
-//update task
-const updatedTaskById = async (taskId , updatedtask)=>{
-  try{
-    const updated = await UpdateTask(taskId,updatedtask);
-    setTasks((prev) =>
-        prev.map((t) => (t.id === taskId ? updated : t))
-      );
+      setTasks((prev) => prev.filter((t) => t.Id !== taskId));
     } catch (err) {
       setError(err.message);
     }
   };
-  return {
-    tasks,
-    isLoading,
-    error,
-    fetchTasks,
-    addTask,
-    deleteTask,
-    updatedTaskById
+  //update task
+  const updateTask = async (taskId, updatedTask) => {
+    try {
+      // Find the current task to get all required fields
+      const currentTask = tasks.find(task => task.Id === taskId);
+      if (!currentTask) {
+        throw new Error("Task not found");
+      }
+
+      // Merge with current task to ensure all fields are present
+      const fullUpdatedTask = { ...currentTask, ...updatedTask };
+
+      // Debug: Check if all required fields have values
+      console.log('Full task data being sent:', fullUpdatedTask);
+      console.log('Field check:', {
+        Title: fullUpdatedTask.Title,
+        Description: fullUpdatedTask.Description,
+        ProjectName: fullUpdatedTask.ProjectName,
+        Status: fullUpdatedTask.Status
+      });
+
+      const response = await UpdateTask(taskId, fullUpdatedTask);
+
+      setTasks(prev => prev.map(task =>
+        task.Id === taskId ? { ...task, ...updatedTask } : task
+      ));
+      return response;
+
+    } catch (error) {
+      console.error('Error updating task:', error);
+      setError(error.message);
+      throw error;
+    }
   };
+  return {
+  tasks,
+  isLoading,
+  error,
+  fetchTasks,
+  addTask,
+  deleteTask,
+  updateTask
+};
+
 }

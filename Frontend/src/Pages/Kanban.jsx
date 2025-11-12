@@ -1,4 +1,4 @@
-import TaskList from "../Components/TaskList";
+import KanbanBoard from "../Components/KanbanBoard";
 import Navbar from "../Components/Navbar";
 import Sidebar from "../Components/Sidebar";
 
@@ -11,7 +11,7 @@ export default function Task() {
         <Navbar />
         <div className="flex-1 overflow-auto p-4">
 
-          <TaskList />
+          <KanbanBoard />
         </div>
       </div>
     </div>

@@ -8,6 +8,7 @@ import EventPopup from "./EventPopup";
 import { CreateEvent, GetAllevents, UpdateEvent } from "../api/EventApi";
 
 const localizer = momentLocalizer(moment);
+const STORAGE_KEY = 'calendar_events_backup';
 
 export default function MyCalendar() {
   const [events, setEvents] = useState([]);
@@ -17,6 +18,14 @@ export default function MyCalendar() {
 
   const DnDCalendar = withDragAndDrop(Calendar);
 
+  // Save events to localStorage whenever they change
+  useEffect(() => {
+    if (events.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+      console.log("Events saved to localStorage:", events.length);
+    }
+  }, [events]);
+
   /*Fetch events from backend*/
   useEffect(() => {
     const fetchEvents = async () => {
@@ -24,41 +33,45 @@ export default function MyCalendar() {
         const data = await GetAllevents();
         console.log("Raw data from API:", data);
         
-          const formatted = data
-        .map(ev => {
-          if (!ev.StartDate || !ev.EndDate) return null;
-          const startDate = new Date(ev.StartDate);
-          const endDate = new Date(ev.EndDate);
-          if (isNaN(startDate) || isNaN(endDate)) return null;
-          return {
-            id: ev.Id,            // Must exist and be unique
-            title: ev.Title || "Untitled Event",
-            description: ev.Description || "",
-            start: startDate,
-            end: endDate,
+        const formatted = data
+          .filter(ev => ev.StartDate && ev.EndDate) // Only include valid events
+          .map(ev => ({
+            id: ev.Id,
+            Id: ev.Id,
+            title: ev.Title || 'Untitled Event',
+            Title: ev.Title || 'Untitled Event',
+            description: ev.Description || '',
+            Description: ev.Description || '',
+            start: new Date(ev.StartDate),
+            end: new Date(ev.EndDate),
             userId: ev.UserId,
-            resource: ev          // Optional: keep original object
-          };
-        })
-        .filter(ev => ev !== null);
-
-      console.log("Final formatted events:", formatted);
-      setEvents(formatted);
-    } catch (error) {
-      console.error("Error fetching events", error);
-    }
-  };
-  fetchEvents();
-}, []);
-
-  // Debug events state changes
-  useEffect(() => {
-    console.log("Current events state:", events);
-  }, [events]);
+            UserId: ev.UserId
+          }));
+        
+        console.log("Formatted events:", formatted);
+        setEvents(formatted);
+      } catch (error) {
+        console.error("Error fetching events", error);
+        
+        // Fallback to localStorage if API fails
+        const backup = localStorage.getItem(STORAGE_KEY);
+        if (backup) {
+          const parsed = JSON.parse(backup);
+          const restoredEvents = parsed.map(ev => ({
+            ...ev,
+            start: new Date(ev.start),
+            end: new Date(ev.end)
+          }));
+          setEvents(restoredEvents);
+          console.log("Restored events from localStorage");
+        }
+      }
+    };
+    fetchEvents();
+  }, []);
 
   // Open popup for editing
   const handleSelectEvent = (event) => {
-    console.log("Selected event:", event);
     setSelectedEvent({ ...event });
     setSelectedDate(null);
     setIsOpenEvent(true);
@@ -66,173 +79,125 @@ export default function MyCalendar() {
 
   // Open popup for creating new event
   const handleSelectSlot = (slotInfo) => {
-    console.log("Selected slot:", slotInfo);
     setSelectedDate(slotInfo.start);
     setSelectedEvent(null);
     setIsOpenEvent(true);
   };
 
-  // Enhanced drag & drop handler
-  const handleEventDrop = async (dropData) => {
-    console.log("=== DRAG DROP STARTED ===");
-    console.log("Full drop data:", dropData);
-    
-    const { event, start, end } = dropData;
-    
-    // Debug the event object structure
-    console.log("🔍 Event object from drag:", event);
-    console.log("🔍 Event object keys:", Object.keys(event));
-    console.log("🔍 Event ID:", event.id);
-    
-    // Find the original event
-    const eventId = event.id;
-    const originalEvent = events.find(ev => String(ev.id) === String(eventId));
-    
-    console.log("✅ Found original event:", originalEvent);
-    
+  // Handle drag & drop
+  const handleEventDrop = async ({ start, end, event }) => {
+    console.log("=== DRAG AND DROP ===");
+    console.log("Event being dragged:", event);
+
+    // Find the original event in state to get all properties
+    const originalEvent = events.find(e => e.id === event.id || e.Id === event.id);
+    console.log("Original event from state:", originalEvent);
+
     if (!originalEvent) {
-      console.error("❌ CANNOT FIND EVENT!");
-      console.error("Available event IDs:", events.map(ev => ev.id));
-      alert("Cannot find event! Check console for details.");
+      console.error("Could not find original event!");
       return;
     }
 
-    // Create updated event
-   const updatedEvent = {
-    ...originalEvent.resource, // <-- use resource to keep all fields
-    start: new Date(start),
-    end: new Date(end)
-  };
-
-    console.log("🔄 Updated event:", updatedEvent);
-
-    // Update local state IMMEDIATELY
-    setEvents(prevEvents => 
-      prevEvents.map(ev => 
-        String(ev.id) === String(originalEvent.id) ? updatedEvent : ev
-      )
-    );
-
-    // Update backend
-    try {
-      const backendData = {
-        Id: parseInt(originalEvent.id),
-        Title: updatedEvent.title,
-        Description: updatedEvent.description,
-        StartDate: new Date(start).toISOString(),
-        EndDate: new Date(end).toISOString(),
-        UserId: updatedEvent.userId,
-      };
-      
-      console.log("📤 Sending to backend:", backendData);
-      
-      const response = await UpdateEvent(originalEvent.id, backendData);
-      console.log("✅ Backend update response:", response);
-      
-    } catch (error) {
-      console.error("❌ Backend update failed:", error);
-      console.error("Error details:", error.response?.data || error.message);
-      
-      // Revert to original on error
-      setEvents(prevEvents => 
-        prevEvents.map(ev => 
-          String(ev.id) === String(originalEvent.id) ? originalEvent : ev
-        )
-      );
-      
-      alert("Failed to update event in database. Changes reverted.");
-    }
-    
-    console.log("=== DRAG DROP FINISHED ===");
-  };
-
-  // Add event resize handler
-  const handleEventResize = async (resizeData) => {
-    console.log("=== EVENT RESIZE STARTED ===");
-    const { event, start, end } = resizeData;
-    
-    const eventId = event.id;
-    const originalEvent = events.find(ev => String(ev.id) === String(eventId));
-    
-    if (!originalEvent) {
-      console.error("Cannot find event for resizing");
-      return;
-    }
-
+    // Create updated event preserving ALL original data
     const updatedEvent = {
-      ...originalEvent,
+      ...originalEvent, // Start with the complete original event
       start: new Date(start),
-      end: new Date(end)
+      end: new Date(end),
     };
 
-    // Update local state
-    setEvents(prevEvents => 
-      prevEvents.map(ev => 
-        String(ev.id) === String(originalEvent.id) ? updatedEvent : ev
-      )
+    console.log("Updated event:", updatedEvent);
+
+    // Update local state immediately
+    setEvents(prev => 
+      prev.map(ev => ev.id === updatedEvent.id ? updatedEvent : ev)
     );
 
     // Update backend
     try {
-      await UpdateEvent(originalEvent.id, {
-        Id: parseInt(originalEvent.id),
-        Title: updatedEvent.title,
-        Description: updatedEvent.description,
+      const payload = {
+        Id: updatedEvent.Id,
+        Title: updatedEvent.Title,
+        Description: updatedEvent.Description,
         StartDate: new Date(start).toISOString(),
         EndDate: new Date(end).toISOString(),
-        UserId: updatedEvent.userId,
-      });
-      console.log("✅ Event resize saved to backend");
+        UserId: updatedEvent.UserId,
+      };
+
+      console.log("Sending payload to backend:", payload);
+      
+      const response = await UpdateEvent(updatedEvent.id, payload);
+      console.log("Backend update response:", response);
+      console.log("✅ Event updated successfully");
     } catch (error) {
-      console.error("❌ Backend update failed on resize:", error);
-      // Revert on error
-      setEvents(prevEvents => 
-        prevEvents.map(ev => 
-          String(ev.id) === String(originalEvent.id) ? originalEvent : ev
-        )
-      );
+      console.error("❌ Backend update failed:", error);
+      console.error("Error details:", error.response?.data);
+      
+      // Keep the local update even if backend fails
+      alert("Warning: Event updated locally but failed to save to server. Changes will persist in browser.");
     }
-    
-    console.log("=== EVENT RESIZE FINISHED ===");
   };
 
   // Handle save from popup
   const handleSave = async (eventData) => {
-    console.log("Saving event:", eventData);
-    
+    console.log("=== SAVE EVENT ===");
+    console.log("Event data from popup:", eventData);
+
     const formattedEvent = {
-      id: eventData.id,
-      title: eventData.Title || "Untitled Event",
-      description: eventData.Description || "",
+      id: eventData.id || eventData.Id || Date.now(),
+      Id: eventData.id || eventData.Id || Date.now(),
+      title: eventData.Title || eventData.title || 'Untitled',
+      Title: eventData.Title || eventData.title || 'Untitled',
+      description: eventData.Description || eventData.description || '',
+      Description: eventData.Description || eventData.description || '',
       start: new Date(eventData.StartDate),
       end: new Date(eventData.EndDate),
-      userId: eventData.UserId
+      userId: eventData.UserId || eventData.userId,
+      UserId: eventData.UserId || eventData.userId,
     };
 
-    if (eventData.id) {
-      // Update existing event
-      setEvents(prev => prev.map(ev => 
-        String(ev.id) === String(formattedEvent.id) ? formattedEvent : ev
-      ));
-    } else {
-      // Add new event
-      try {
-        const newEvent = await CreateEvent(eventData);
-        const formatted = {
-          id: newEvent.Id,
-          title: newEvent.Title || "Untitled Event",
-          description: newEvent.Description || "",
-          start: new Date(newEvent.StartDate),
-          end: new Date(newEvent.EndDate),
-          userId: newEvent.UserId
+    try {
+      if (eventData.id || eventData.Id) {
+        // Update existing
+        console.log("Updating existing event...");
+        
+        const payload = {
+          Id: formattedEvent.Id,
+          Title: formattedEvent.Title,
+          Description: formattedEvent.Description,
+          StartDate: formattedEvent.start.toISOString(),
+          EndDate: formattedEvent.end.toISOString(),
+          UserId: formattedEvent.UserId,
         };
-        setEvents(prev => [...prev, formatted]);
-      } catch (error) {
-        console.error("Failed to create event:", error);
+
+        await UpdateEvent(formattedEvent.id, payload);
+        setEvents(prev => prev.map(ev => ev.id === formattedEvent.id ? formattedEvent : ev));
+        console.log("✅ Event updated");
+      } else {
+        // Create new
+        console.log("Creating new event...");
+        
+        const payload = {
+          Title: formattedEvent.Title,
+          Description: formattedEvent.Description,
+          StartDate: formattedEvent.start.toISOString(),
+          EndDate: formattedEvent.end.toISOString(),
+          UserId: formattedEvent.UserId,
+        };
+
+        const response = await CreateEvent(payload);
+        const newEvent = {
+          ...formattedEvent,
+          id: response.Id,
+          Id: response.Id,
+        };
+        setEvents(prev => [...prev, newEvent]);
+        console.log("✅ Event created");
       }
+    } catch (error) {
+      console.error("❌ Save failed:", error);
+      console.error("Error details:", error.response?.data);
+      alert("Failed to save event to server. Please try again.");
     }
-    
-    setIsOpenEvent(false);
   };
 
   return (
@@ -246,19 +211,7 @@ export default function MyCalendar() {
         onSelectSlot={handleSelectSlot}
         onSelectEvent={handleSelectEvent}
         onEventDrop={handleEventDrop}
-        onEventResize={handleEventResize}
-        resizable
         style={{ height: "77vh" }}
-        eventPropGetter={(event) => ({
-          style: {
-            backgroundColor: '#3174ad',
-            borderRadius: '5px',
-            opacity: 0.8,
-            color: 'white',
-            border: '0px',
-            display: 'block'
-          }
-        })}
       />
       {isOpenEvent && (
         <EventPopup
