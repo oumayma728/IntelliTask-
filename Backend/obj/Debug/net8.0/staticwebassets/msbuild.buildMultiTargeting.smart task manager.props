@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\build\smart task manager.props" />
-</Project>

@@ -1,35 +1,30 @@
 import api from "./api";
-//Login Function
-export const login = async (Email, Password) =>{
-    try{
-        const response = await api.post("http://localhost:5000/api/auth/login" , {Email, Password});
-        // response.data should contain { token, mode, email, username } from backend
-        console.log("test done");
-        return response.data;
-        
-    }catch (error)
-    {
-        console.error("Login error:",error.response?.data || error.message);
-        throw error;
-    }
+import jwtDecode from "jwt-decode";
+
+// Auth API calls
+export const login = async (email, password) => {
+  try {
+    const response = await api.post("/auth/login", { email, password });
+    return response.data; // { token, mode, email, username }
+  } catch (error) {
+if (process.env.NODE_ENV === "development") {
+            console.error(" login error:", error.response?.data || error.message);
+        }    throw error;
+  }
 };
-export const register =async (email ,password , mode="personal") =>{
-    try{
-        const response= await api.post("http://localhost:5000/api/auth/register" ,{email,password, mode});
-        return response.data
-    }catch (error)
-    {
-        //get error array from Axios
-        const errors = error.response?.data || [{description:"Unknown error"}];
-        //get error array from Axios
-    const errorMessage = errors.map(e => e.description).join("\n");
+
+export const register = async (email, password, mode = "personal") => {
+  try {
+    const response = await api.post("/auth/register", { email, password, mode });
+    return response.data;
+  } catch (error) {
+    const data = error.response?.data;
+    const errorMessage = Array.isArray(data)
+      ? data.map(e => e.description).join("\n")
+      : data?.message || "Unknown error";
     alert(errorMessage);
-
-    console.error("Register error:", error.response?.data || error.message);
-        throw error;
-    }
-}
-
-export const logout = () => {
-    localStorage.removeItem("token");
+if (process.env.NODE_ENV === "development") {
+      console.error("❌ Register Error:", errorMessage);
+    }    throw error;
+  }
 };
