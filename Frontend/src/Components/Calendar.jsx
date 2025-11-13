@@ -2,42 +2,29 @@ import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import { useEffect, useState } from "react";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import "react-big-calendar/lib/addons/dragAndDrop/styles.css"; 
+import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import EventPopup from "./EventPopup";
-import { CreateEvent, GetAllevents, UpdateEvent } from "../api/EventApi";
+import { CreateEvent, DeleteEvent, GetAllevents, UpdateEvent } from "../api/EventApi";
 
 const localizer = momentLocalizer(moment);
-const STORAGE_KEY = 'calendar_events_backup';
+const DnDCalendar = withDragAndDrop(Calendar);
 
 export default function MyCalendar() {
-  const [events, setEvents] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [events, setEvents] = useState([]); //stores all events shown on the calendar, Starts empty
+  const [selectedDate, setSelectedDate] = useState(null); //stores the date when user clicks on a free slot
   const [isOpenEvent, setIsOpenEvent] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
-
-  const DnDCalendar = withDragAndDrop(Calendar);
-
-  // Save events to localStorage whenever they change
-  useEffect(() => {
-    if (events.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
-      console.log("Events saved to localStorage:", events.length);
-    }
-  }, [events]);
 
   /*Fetch events from backend*/
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const data = await GetAllevents();
-        console.log("Raw data from API:", data);
-        
-        const formatted = data
-          .filter(ev => ev.StartDate && ev.EndDate) // Only include valid events
+        const data = await GetAllevents(); // fetch events from backend
+        const formatted = data //Format events in a way the calendar understands
+          .filter(ev => ev.StartDate && ev.EndDate) //Only take events that have a start and end date
           .map(ev => ({
             id: ev.Id,
-            Id: ev.Id,
             title: ev.Title || 'Untitled Event',
             Title: ev.Title || 'Untitled Event',
             description: ev.Description || '',
@@ -47,24 +34,10 @@ export default function MyCalendar() {
             userId: ev.UserId,
             UserId: ev.UserId
           }));
-        
-        console.log("Formatted events:", formatted);
-        setEvents(formatted);
+
+        setEvents(formatted); //Saves formatted events into state
       } catch (error) {
         console.error("Error fetching events", error);
-        
-        // Fallback to localStorage if API fails
-        const backup = localStorage.getItem(STORAGE_KEY);
-        if (backup) {
-          const parsed = JSON.parse(backup);
-          const restoredEvents = parsed.map(ev => ({
-            ...ev,
-            start: new Date(ev.start),
-            end: new Date(ev.end)
-          }));
-          setEvents(restoredEvents);
-          console.log("Restored events from localStorage");
-        }
       }
     };
     fetchEvents();
@@ -86,67 +59,49 @@ export default function MyCalendar() {
 
   // Handle drag & drop
   const handleEventDrop = async ({ start, end, event }) => {
-    console.log("=== DRAG AND DROP ===");
-    console.log("Event being dragged:", event);
-
-    // Find the original event in state to get all properties
-    const originalEvent = events.find(e => e.id === event.id || e.Id === event.id);
-    console.log("Original event from state:", originalEvent);
-
-    if (!originalEvent) {
-      console.error("Could not find original event!");
-      return;
-    }
-
     // Create updated event preserving ALL original data
     const updatedEvent = {
-      ...originalEvent, // Start with the complete original event
+      ...event, // Start with the complete original event
       start: new Date(start),
       end: new Date(end),
     };
-
-    console.log("Updated event:", updatedEvent);
-
     // Update local state immediately
-    setEvents(prev => 
+    setEvents(prev =>
       prev.map(ev => ev.id === updatedEvent.id ? updatedEvent : ev)
     );
 
-    // Update backend
+    // send updated payload backend
     try {
       const payload = {
         Id: updatedEvent.Id,
+        title: updatedEvent.title,
         Title: updatedEvent.Title,
+
         Description: updatedEvent.Description,
         StartDate: new Date(start).toISOString(),
         EndDate: new Date(end).toISOString(),
         UserId: updatedEvent.UserId,
       };
 
-      console.log("Sending payload to backend:", payload);
-      
-      const response = await UpdateEvent(updatedEvent.id, payload);
-      console.log("Backend update response:", response);
-      console.log("✅ Event updated successfully");
+
+      const saved = await UpdateEvent(updatedEvent.id, payload);
+      // Update local state only after backend success
+      setEvents(prev => prev.map(ev => ev.id === saved.id ? saved : ev));
     } catch (error) {
       console.error("❌ Backend update failed:", error);
       console.error("Error details:", error.response?.data);
-      
+
       // Keep the local update even if backend fails
       alert("Warning: Event updated locally but failed to save to server. Changes will persist in browser.");
     }
   };
 
   // Handle save from popup
-  const handleSave = async (eventData) => {
-    console.log("=== SAVE EVENT ===");
-    console.log("Event data from popup:", eventData);
+  const handleSave = async (eventData) => { //eventData is the data coming from the popup
 
     const formattedEvent = {
       id: eventData.id || eventData.Id || Date.now(),
-      Id: eventData.id || eventData.Id || Date.now(),
-      title: eventData.Title || eventData.title || 'Untitled',
-      Title: eventData.Title || eventData.title || 'Untitled',
+      title: eventData.title || eventData.Title || 'Untitled',
       description: eventData.Description || eventData.description || '',
       Description: eventData.Description || eventData.description || '',
       start: new Date(eventData.StartDate),
@@ -157,12 +112,10 @@ export default function MyCalendar() {
 
     try {
       if (eventData.id || eventData.Id) {
-        // Update existing
-        console.log("Updating existing event...");
-        
+
         const payload = {
-          Id: formattedEvent.Id,
-          Title: formattedEvent.Title,
+          Id: formattedEvent.id,
+          Title: formattedEvent.title,
           Description: formattedEvent.Description,
           StartDate: formattedEvent.start.toISOString(),
           EndDate: formattedEvent.end.toISOString(),
@@ -170,14 +123,12 @@ export default function MyCalendar() {
         };
 
         await UpdateEvent(formattedEvent.id, payload);
+        //.map() goes through all events
         setEvents(prev => prev.map(ev => ev.id === formattedEvent.id ? formattedEvent : ev));
-        console.log("✅ Event updated");
       } else {
         // Create new
-        console.log("Creating new event...");
-        
         const payload = {
-          Title: formattedEvent.Title,
+          Title: formattedEvent.title,
           Description: formattedEvent.Description,
           StartDate: formattedEvent.start.toISOString(),
           EndDate: formattedEvent.end.toISOString(),
@@ -191,7 +142,6 @@ export default function MyCalendar() {
           Id: response.Id,
         };
         setEvents(prev => [...prev, newEvent]);
-        console.log("✅ Event created");
       }
     } catch (error) {
       console.error("❌ Save failed:", error);
@@ -199,6 +149,23 @@ export default function MyCalendar() {
       alert("Failed to save event to server. Please try again.");
     }
   };
+
+
+  // delete event
+  const handleDeleteEvent = async (eventId) => {
+    if (!window.confirm("Are you sure you want to delete this event?")) return;
+    try {
+      await DeleteEvent(eventId);
+      setEvents(prev => prev.filter(ev => ev.id !== eventId))
+    } catch (error) {
+      console.error("Delete failed:", error);
+
+    }
+  }
+
+
+
+
 
   return (
     <div style={{ margin: "100px", color: "white" }}>
@@ -208,6 +175,7 @@ export default function MyCalendar() {
         events={events}
         startAccessor="start"
         endAccessor="end"
+        onDelete={handleDeleteEvent}
         onSelectSlot={handleSelectSlot}
         onSelectEvent={handleSelectEvent}
         onEventDrop={handleEventDrop}
@@ -219,6 +187,7 @@ export default function MyCalendar() {
           onClose={() => setIsOpenEvent(false)}
           onSave={handleSave}
           date={selectedDate}
+          onDelete={handleDeleteEvent} 
           event={selectedEvent}
         />
       )}

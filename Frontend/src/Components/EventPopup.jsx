@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { CreateEvent, UpdateEvent } from '../api/EventApi';
 
-export default function EventPopup({ isOpen, onClose, onSave, date, event }) {
+export default function EventPopup({ isOpen, onClose,onDelete, onSave, date, event }) {
   const [Title, setTitle] = useState("");
   const [StartDate, setStart] = useState("");
   const [EndDate, setEnd] = useState("");
@@ -40,7 +40,8 @@ export default function EventPopup({ isOpen, onClose, onSave, date, event }) {
       if (isNew) {
         savedEvent = await CreateEvent(dto);
       } else {
-        savedEvent = await UpdateEvent(dto);
+        savedEvent = await UpdateEvent(event.id ,dto);
+
       }
 
       if (savedEvent) {
@@ -66,8 +67,23 @@ export default function EventPopup({ isOpen, onClose, onSave, date, event }) {
           <input type="text" value={Description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" required className="w-full p-2 border rounded-md"/>
           <input type="datetime-local" value={StartDate} onChange={(e) => setStart(e.target.value)} required className="w-full p-2 border rounded-md"/>
           <input type="datetime-local" value={EndDate} onChange={(e) => setEnd(e.target.value)} required className="w-full p-2 border rounded-md"/>
+          <div className="flex space-x-2 mt-4">
           <button type="submit" className="bg-[#2e4d9c] text-white px-4 py-2 rounded-lg">Save</button>
           <button type="button" onClick={onClose} className="bg-gray-400 text-white px-4 py-2 rounded-lg">Cancel</button>
+              {event && (
+  <button
+    type="button"
+    onClick={() => {
+      onDelete?.(event.id); // safely call onDelete if it exists
+      onClose();
+    }}
+    className="bg-red-500 text-white px-4 py-2 rounded-lg"
+  >
+    Delete
+  </button>
+)}</div>
+
+
         </form>
       </div>
     </div>
