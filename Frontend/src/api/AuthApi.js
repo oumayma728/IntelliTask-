@@ -1,15 +1,13 @@
 import api from "./api";
-import jwtDecode from "jwt-decode";
 
-// Auth API calls
 export const login = async (email, password) => {
   try {
     const response = await api.post("/auth/login", { email, password });
     return response.data; // { token, mode, email, username }
   } catch (error) {
-if (process.env.NODE_ENV === "development") {
-            console.error(" login error:", error.response?.data || error.message);
-        }    throw error;
+    if (process.env.NODE_ENV === "development") {
+      console.error(" login error:", error.response?.data || error.message);
+    } throw error;
   }
 };
 
@@ -23,8 +21,8 @@ export const register = async (email, password, mode = "personal") => {
       ? data.map(e => e.description).join("\n")
       : data?.message || "Unknown error";
     alert(errorMessage);
-if (process.env.NODE_ENV === "development") {
-      console.error("❌ Register Error:", errorMessage);
-    }    throw error;
+    if (process.env.NODE_ENV === "development") {
+      console.error(" Register Error:", errorMessage);
+    } throw error;
   }
 };

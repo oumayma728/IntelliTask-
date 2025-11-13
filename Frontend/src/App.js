@@ -1,20 +1,22 @@
-import logo from './logo.svg';
 import './App.css';
 import './index.css';
 
 import { BrowserRouter as Router } from "react-router-dom";
-import { Sidebar } from './Components/Sidebar';
 import { AuthProvider } from './Context/AuthContext';
+import { LoaderProvider } from './Context/LoaderContext'; // Import LoaderProvider
 import AppRoutes from './Routes';
 
 function App() {
   return (
     <div className='min-h-screen bg-gray-800'>
-    <AuthProvider>
-      <Router>
-        <AppRoutes/>
-      </Router>
-    </AuthProvider></div>
+      <AuthProvider>
+        <LoaderProvider> 
+          <Router>
+            <AppRoutes/>
+          </Router>
+        </LoaderProvider>
+      </AuthProvider>
+    </div>
   );
 }
 

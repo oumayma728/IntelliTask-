@@ -44,11 +44,14 @@ export const DeleteEvent = async (id) => {
 }
 export const UpdateEvent = async (id, updatedEvent) => {
     try {
-        const response = await api.put(`/events/${id}`, { event: updatedEvent });
-        return response.data
+        const response = await api.put(`/events/${id}`, updatedEvent, {
+            headers: { "Content-Type": "application/json" }
+        });
+        return response.data;
     } catch (error) {
         if (process.env.NODE_ENV === "development") {
             console.error("Update error:", error.response?.data || error.message);
-        } throw error;
+        }
+        throw error;
     }
 }
