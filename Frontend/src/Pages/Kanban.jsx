@@ -4,7 +4,7 @@ import Sidebar from "../Components/Sidebar";
 
 export default function Task() {
   return (
-    <div className="flex h-screen bg-gray-900 text-white">
+    <div className="flex h-screen">
       <Sidebar />
 
       <div className="flex flex-col flex-1 overflow-hidden">

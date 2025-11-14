@@ -142,10 +142,10 @@ const TaskCard = ({
                                 onClick={() => handleStatusChange(col.id)}
                                 disabled={updatingTaskId === task.Id}
                                 className={`text-xs px-2 py-1 rounded flex-1 ${col.id === "In Progress"
-                                        ? "bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800"
-                                        : col.id === "To Do"
-                                            ? "bg-yellow-600 hover:bg-yellow-500 disabled:bg-yellow-800"
-                                            : "bg-green-600 hover:bg-green-500 disabled:bg-green-800"
+                                    ? "bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800"
+                                    : col.id === "To Do"
+                                        ? "bg-yellow-600 hover:bg-yellow-500 disabled:bg-yellow-800"
+                                        : "bg-green-600 hover:bg-green-500 disabled:bg-green-800"
                                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 Move to {col.title}

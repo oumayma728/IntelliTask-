@@ -168,7 +168,7 @@ export default function MyCalendar() {
 
 
   return (
-    <div style={{ margin: "100px", color: "white" }}>
+    <div style={{ margin: "100px" }}>
       <DnDCalendar
         selectable
         localizer={localizer}

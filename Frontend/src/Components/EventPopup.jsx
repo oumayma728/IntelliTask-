@@ -59,7 +59,7 @@ export default function EventPopup({ isOpen, onClose,onDelete, onSave, date, eve
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-10">
+    <div className="fixed inset-0 flex items-center justify-center  z-10">
       <div className="bg-white p-10 rounded-xl w-[400px] text-gray-800 shadow-lg">
         <h2 className="text-2xl font-semibold text-[#2e4d9c] mb-4">{event ? "Edit Event" : "Add Event"}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -74,7 +74,7 @@ export default function EventPopup({ isOpen, onClose,onDelete, onSave, date, eve
   <button
     type="button"
     onClick={() => {
-      onDelete?.(event.id); // safely call onDelete if it exists
+      onDelete?.(event.id);
       onClose();
     }}
     className="bg-red-500 text-white px-4 py-2 rounded-lg"

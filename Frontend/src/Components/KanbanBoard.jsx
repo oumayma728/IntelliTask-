@@ -53,10 +53,10 @@ const KanbanBoard = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col justify-start p-8">
+    <div className="min-h-screen flex flex-col justify-start p-8">
       
       {/* Top Nav / Tabs */}
-      <nav className="w-full border-b border-gray-700 bg-gray-900 text-white sticky top-0 z-10">
+      <nav className="w-full border-b border-gray-700 sticky top-0 z-10">
         <div className="px-8 pt-6 pb-2">
           <div className="flex items-center justify-between">
             <h2 className="text-3xl font-semibold tracking-wide">
@@ -67,9 +67,9 @@ const KanbanBoard = () => {
 
         {/* Buttons */}
         <div className="flex items-center px-8 space-x-8 border-b border-gray-700 pb-2">
-          <button onClick={() => navigate("/Task")} className="text-gray-400 hover:text-white pb-2">Table</button>
-          <button className="border-b-2 border-blue-500 pb-2 text-white font-medium">Kanban</button>
-          <button onClick={() => navigate("/Calendar")} className="text-gray-400 hover:text-white pb-2">Calendar</button>
+          <button onClick={() => navigate("/Task")} className=" hover:text-white pb-2">Table</button>
+          <button className="border-b-2 border-blue-500 pb-2  font-medium">Kanban</button>
+          <button onClick={() => navigate("/Calendar")} className=" hover:text-white pb-2">Calendar</button>
         </div>
 
         {/* Search & Filter */}
