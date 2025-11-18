@@ -2,8 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../Context/AuthContext";
 import { useTheme } from "../Context/ThemeContext";
 import { FaMoon, FaSun } from "react-icons/fa";
+import ChatBot from "./AiHelper"
 export default function Navbar() {
     const [showNotifications, setShowNotifications] = useState(false);
+    const [showChatBot, setShowChatBot] = useState(false);
 
     const { user } = useAuth();
     const { theme, toggleTheme } = useTheme();
@@ -67,6 +69,24 @@ export default function Navbar() {
                         <li><a href="/" className="hover:text-blue-200">Invite members</a></li>
                         <li><a href="/" className="hover:text-blue-200">Search</a></li>
                     </ul>
+                    <button
+                        onClick={() => setShowChatBot(!showChatBot)}
+                        className="px-3 py-1 rounded-md "
+                    >
+                        SideKick
+                    </button>
+                    {showChatBot && (
+                        <div className="fixed bottom-20 right-5 w-80 h-96 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg z-50 flex flex-col">
+                            <ChatBot />
+                            <button
+                                className="self-end m-2 bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                                onClick={() => setShowChatBot(false)}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    )}
+
                     <button
                         onClick={() => {
                             console.log("Navbar button clicked. theme before:", theme);
