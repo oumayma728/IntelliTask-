@@ -46,8 +46,8 @@ export default function Navbar() {
                 <div className="flex justify-between items-center h-16">
                     <ul className="flex items-center space-x-6">
                         <li><a href="/" className="hover:text-blue-300 transition-colors duration-200 font-medium px-3 py-2 rounded-md">Home</a></li>
-                        <li className="relative">
-                            <button onClick={() => setShowNotifications(!showNotifications)}
+                        {/*<li className="relative">
+                           <button onClick={() => setShowNotifications(!showNotifications)}
                                 className="hover:text-blue-300 transition-colors duration-200 font-medium px-3 py-2 rounded-md flex items-center gap-2">
                                 Notifications
                                 <svg
@@ -67,7 +67,7 @@ export default function Navbar() {
                             )}
                         </li>
                         <li><a href="/" className="hover:text-blue-200">Invite members</a></li>
-                        <li><a href="/" className="hover:text-blue-200">Search</a></li>
+                        <li><a href="/" className="hover:text-blue-200">Search</a></li>*/}
                     </ul>
                     <button
                         onClick={() => setShowChatBot(!showChatBot)}
