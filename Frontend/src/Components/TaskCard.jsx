@@ -57,27 +57,27 @@ const TaskCard = ({
                     type="text"
                     value={task.Title || ""}
                     onChange={(e) => setEditingTask({ ...task, Title: e.target.value })}
-                    className="bg-gray-600 text-white px-2 py-1 rounded w-full border border-gray-500"
+                    className=" px-2 py-1 rounded w-full border border-gray-500"
                     placeholder="Title *"
                 />
                 <input
                     type="text"
                     value={task.Description || ""}
                     onChange={(e) => setEditingTask({ ...task, Description: e.target.value })}
-                    className="bg-gray-600 text-white px-2 py-1 rounded w-full border border-gray-500"
+                    className=" px-2 py-1 rounded w-full border border-gray-500"
                     placeholder="Description"
                 />
                 <input
                     type="date"
                     value={task.DueDate || ""}
                     onChange={(e) => setEditingTask({ ...task, DueDate: e.target.value })}
-                    className="bg-gray-600 text-white px-2 py-1 rounded border border-gray-500"
+                    className=" px-2 py-1 rounded border border-gray-500"
                 />
                 <input
                     type="text"
                     value={task.ProjectName || ""}
                     onChange={(e) => setEditingTask({ ...task, ProjectName: e.target.value })}
-                    className="bg-gray-600 text-white px-2 py-1 rounded w-full border border-gray-500"
+                    className=" px-2 py-1 rounded w-full border border-gray-500"
                     placeholder="Project Name *"
                 />
                 <div className="flex gap-2">
@@ -89,7 +89,7 @@ const TaskCard = ({
                     </button>
                     <button
                         onClick={() => setEditingTask(null)}
-                        className="bg-gray-600 hover:bg-gray-500 px-3 py-1 rounded text-sm flex-1"
+                        className=" hover:bg-gray-500 px-3 py-1 rounded text-sm flex-1"
                     >
                         Cancel
                     </button>
@@ -102,25 +102,25 @@ const TaskCard = ({
         <div
             draggable={!task.isNew && updatingTaskId !== task.Id}
             onDragStart={(e) => e.dataTransfer.setData("taskId", task.Id)}
-            className={`bg-gray-700 p-3 rounded-lg mb-3 cursor-move hover:bg-gray-600 transition relative ${updatingTaskId === task.Id ? "opacity-50" : ""}`}
+            className={` p-3 rounded-lg mb-3 cursor-move hover: transition relative ${updatingTaskId === task.Id ? "opacity-50" : ""}`}
         >
             {updatingTaskId === task.Id && (
-                <div className="absolute inset-0 bg-gray-800 bg-opacity-50 rounded-lg flex items-center justify-center">
+                <div className="absolute inset-0 bg-opacity-50 rounded-lg flex items-center justify-center">
                     <FaSpinner className="animate-spin text-blue-500" />
                 </div>
             )}
 
             {/* Task Header */}
             <div className="flex justify-between items-start mb-2">
-                <h4 className="font-medium text-white">{task.Title || "Untitled"}</h4>
-                {task.ProjectName && <span className="bg-gray-600 text-xs px-2 py-1 rounded">{task.ProjectName}</span>}
+                <h4 className="font-medium">{task.Title || "Untitled"}</h4>
+                {task.ProjectName && <span className=" text-xs px-2 py-1 rounded">{task.ProjectName}</span>}
             </div>
 
             {/* Task Description */}
-            <p className="text-gray-300 text-sm mb-2">{task.Description || "No description"}</p>
+            <p className=" text-sm mb-2">{task.Description || "No description"}</p>
 
             {/* Footer */}
-            <div className="flex justify-between items-center text-xs text-gray-400 mb-2">
+            <div className="flex justify-between items-center text-xs  mb-2">
                 <span>{formatDate(task.DueDate)}</span>
                 <div className="flex gap-2">
                     <button onClick={() => setEditingTask(task)} className="text-blue-400 hover:text-blue-300" disabled={updatingTaskId === task.Id}>

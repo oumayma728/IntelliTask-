@@ -58,10 +58,10 @@ const KanbanColumn = ({
             </div>
 
             {/* Column Body */}
-            <div className="bg-gray-800 p-3 rounded-b-lg min-h-96">
+            <div className=" p-3 rounded-b-lg min-h-96">
                 <div
                     onClick={handleAddTask}
-                    className="text-gray-400 text-center py-4 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors mb-3"
+                    className="text-center py-4 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors mb-3"
                 >
                     + Add Task
                 </div>
@@ -82,7 +82,7 @@ const KanbanColumn = ({
                 ))}
 
                 {tasks.length === 0 && !editingTask && (
-                    <div className="text-gray-400 text-center py-8 border-2 border-dashed border-gray-600 rounded-lg">
+                    <div className=" text-center py-8 border-2 border-dashed border-gray-600 rounded-lg">
                         Drop tasks here
                     </div>
                 )}

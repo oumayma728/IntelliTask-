@@ -56,7 +56,7 @@ const KanbanBoard = () => {
     <div className="min-h-screen flex flex-col justify-start p-8">
       
       {/* Top Nav / Tabs */}
-      <nav className="w-full border-b border-gray-700 sticky top-0 z-10">
+      <nav className="w-full border-b border-gray-700  top-0 z-10">
         <div className="px-8 pt-6 pb-2">
           <div className="flex items-center justify-between">
             <h2 className="text-3xl font-semibold tracking-wide">
@@ -80,12 +80,12 @@ const KanbanBoard = () => {
               placeholder="Search Tasks"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-gray-700 text-white px-3 py-2 rounded w-64"
+              className=" px-3 py-2 rounded w-64"
             />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-gray-700 text-white px-3 py-2 rounded"
+              className=" px-3 py-2 rounded"
             >
               <option value="all">All Status</option>
               <option value="To Do">To Do</option>
