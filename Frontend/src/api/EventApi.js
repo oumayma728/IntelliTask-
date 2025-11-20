@@ -10,6 +10,20 @@ export const CreateEvent = async (event) => {
         throw error;
     }
 }
+
+export const CreateGoogleEvent = async (event) => {
+    try {
+        const response = await api.post("/events/google-events", event); // You would create a new endpoint if needed
+        return response.data;
+    } catch (error) {
+        if (process.env.NODE_ENV === "development") {
+            console.error("Create Google event error:", error.response?.data || error.message);
+        }
+        throw error;
+    }
+}
+
+
 export const GetAllevents = async () => {
     try {
         const response = await api.get("/events")
@@ -18,6 +32,17 @@ export const GetAllevents = async () => {
         if (process.env.NODE_ENV === "development") {
             console.error("get events error:", error.response?.data || error.message);
         } throw error;
+    }
+}
+export const GetGoogleEvents = async () =>{
+    try {
+        const response = await api.get("/events/google-events");
+        return response.data;
+    } catch (error) {
+        if (process.env.NODE_ENV === "development") {
+            console.error("get events error:", error.response?.data || error.message);
+        } throw error;
+        
     }
 }
 export const GetEventById = async (id) => {

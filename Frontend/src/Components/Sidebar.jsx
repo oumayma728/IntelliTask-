@@ -23,6 +23,7 @@ export default function Sidebar() {
   const menuItems = [
     { icon: <FaTasks size={20} />, label: 'Tasks', path: '/Task' },
     { icon: <FaCalendarAlt size={20} />, label: 'Calendar', path: '/Calendar' },
+    {  label: 'Bug Tracker', path: '/' },
     { icon: <FaCog size={20} />, label: 'Settings' },
     { icon: <FaSignOutAlt size={20} />, label: 'Logout', action: "logout" },
   ];
