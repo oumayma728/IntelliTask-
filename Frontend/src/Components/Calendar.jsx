@@ -1,12 +1,12 @@
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import EventPopup from "./EventPopup";
-import { CreateEvent, DeleteEvent, GetAllevents, UpdateEvent, GetGoogleEvents } from "../api/EventApi";
-
+import { CreateEvent, DeleteEvent, GetAllevents, UpdateEvent } from "../api/EventApi";
+import googleCalendarApi from "../api/GoogleCalendarApi";
 const localizer = momentLocalizer(moment);
 const DnDCalendar = withDragAndDrop(Calendar);
 
@@ -15,14 +15,20 @@ export default function MyCalendar() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [isOpenEvent, setIsOpenEvent] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [isGoogleConnected, setIsGoogleConnected] = useState(false);
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
+  const [loadingEvents, setLoadingEvents] = useState(false);
 
-  // Fetch DB events on mount
-useEffect(() => {
-  const fetchAllEvents = async () => {
+  // Check if token is expired
+  const isTokenExpired = (tokens) => {
+    return Date.now() >= tokens.expiresAt;
+  };
+
+  // Fetch DB events
+  const fetchDbEvents = async () => {
     try {
-      // 1️⃣ Fetch DB events
       const dbEvents = await GetAllevents();
-      const formattedDbEvents = dbEvents
+      return dbEvents
         .filter(ev => ev.StartDate && ev.EndDate)
         .map(ev => ({
           id: ev.Id,
@@ -32,69 +38,210 @@ useEffect(() => {
           end: new Date(ev.EndDate),
           userId: ev.UserId,
           isGoogleEvent: false,
+          source: 'local'
         }));
-
-      // 2️⃣ Fetch Google events
-      const googleEvents = await GetGoogleEvents();
-      const formattedGoogleEvents = googleEvents
-        .filter(ev => ev.StartDate && ev.EndDate)
-        .map((ev, index) => ({
-          id: `google-${ev.Title}-${index}`,
-          title: ev.Title || 'Untitled Google Event',
-          description: ev.Description || '',
-          start: new Date(ev.StartDate),
-          end: new Date(ev.EndDate),
-          userId: null,
-          isGoogleEvent: true,
-        }));
-
-      // 3️⃣ Merge and set state
-      setEvents([...formattedDbEvents, ...formattedGoogleEvents]);
-      console.log("✅ Loaded DB + Google events");
     } catch (error) {
-      console.error("Error fetching events", error);
-      alert("Failed to fetch events from server or Google Calendar.");
+      console.error("Error fetching DB events", error);
+      return [];
     }
   };
 
-  fetchAllEvents();
-}, []);
+ const fetchGoogleEvents = useCallback(async () => {
+    const savedTokens = localStorage.getItem('googleCalendarTokens');
+    if (!savedTokens) return [];
 
-
-  // Fetch Google events and merge
-  const fetchGoogleEvents = async () => {
     try {
-      const googleEvents = await GetGoogleEvents();
+      setLoadingGoogle(true);
+      let tokens = JSON.parse(savedTokens);
       
-      const formattedGoogleEvents = googleEvents
-        .filter(ev => ev.StartDate && ev.EndDate) // ✅ Filter out invalid events
-        .map((ev, index) => ({
-          id: `google-${ev.Title}-${index}`, // ✅ Unique ID for Google events
-          title: ev.Title || 'Untitled Google Event',
-          description: ev.Description || '',
-          start: new Date(ev.StartDate), // ✅ Fixed property name
-          end: new Date(ev.EndDate),     // ✅ Fixed property name
-          userId: null,
-          isGoogleEvent: true, // ✅ Mark as Google event
-        }));
+      // Refresh token if expired or about to expire (within 5 minutes)
+      if (isTokenExpired(tokens) || (tokens.expiresAt - Date.now()) < 300000) {
+        console.log("🔄 Refreshing Google token...");
+        const newTokens = await googleCalendarApi.refreshAccessToken(tokens.refreshToken);
+        tokens = {
+          ...tokens,
+          accessToken: newTokens.accessToken,
+          expiresAt: Date.now() + (newTokens.expiresIn * 1000)
+        };
+        localStorage.setItem('googleCalendarTokens', JSON.stringify(tokens));
+      }
 
-      // Merge without duplicating
-      setEvents(prev => [
-        ...prev.filter(e => !e.isGoogleEvent), // Keep only DB events
-        ...formattedGoogleEvents                // Add Google events
-      ]);
+      const googleEvents = await googleCalendarApi.getGoogleEvents(tokens.accessToken);
       
-      console.log(`✅ Loaded ${formattedGoogleEvents.length} Google Calendar events`);
+      return googleEvents
+        .filter(ev => ev.Start && ev.End) 
+        .map((ev, index) => {
+   
+          return {
+            id: `google-${ev.Id || index}`, 
+            title: ev.Summary || "Google Event", // ✅ Capital 'S'
+            description: ev.Description || "", // ✅ Capital 'D'
+            start: new Date(ev.Start), // ✅ Direct date parsing
+            end: new Date(ev.End), // ✅ Direct date parsing
+            isGoogleEvent: true,
+            source: 'google',
+            googleEventId: ev.Id // ✅ Capital 'I'
+          };
+        });
     } catch (error) {
       console.error("Error fetching Google events", error);
-      alert("Failed to connect to Google Calendar. Please try again.");
+      
+      // If token is invalid, disconnect Google
+      if (error.response?.status === 401) {
+        disconnectGoogleCalendar();
+        alert("Google Calendar connection expired. Please reconnect.");
+      }
+      
+      return [];
+    } finally {
+      setLoadingGoogle(false);
+    }
+  }, []);
+
+  // Check Google connection status
+  const checkGoogleConnection = useCallback(() => {
+    const savedTokens = localStorage.getItem('googleCalendarTokens');
+    if (!savedTokens) {
+      setIsGoogleConnected(false);
+      return false;
+    }
+    
+    try {
+      const tokens = JSON.parse(savedTokens);
+      const isConnected = !isTokenExpired(tokens);
+      setIsGoogleConnected(isConnected);
+      return isConnected;
+    } catch (error) {
+      setIsGoogleConnected(false);
+      return false;
+    }
+  }, []);
+
+  // Handle OAuth callback
+  const handleOAuthCallback = useCallback(async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Get tokens directly from URL (your backend sends these)
+    const accessToken = urlParams.get('accessToken');
+    const refreshToken = urlParams.get('refreshToken');
+    const expiresIn = urlParams.get('expiresIn');
+    const oauthError = urlParams.get('oauth');
+
+    // Check for errors
+    if (oauthError === 'error') {
+      const message = urlParams.get('message');
+      alert(`OAuth failed: ${message}`);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    // If we have tokens, store them
+    if (accessToken && refreshToken) {
+      setLoadingGoogle(true);
+      try {        
+        // Store tokens with expiry
+        const tokensWithExpiry = {
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+          expiresAt: Date.now() + (parseInt(expiresIn) * 1000)
+        };
+        
+        localStorage.setItem('googleCalendarTokens', JSON.stringify(tokensWithExpiry));
+        
+        setIsGoogleConnected(true);
+        
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Fetch Google events after successful connection
+        const googleEvents = await fetchGoogleEvents();
+        
+        // Merge with existing local events
+        setEvents(prev => [
+          ...prev.filter(e => !e.isGoogleEvent),
+          ...googleEvents
+        ]);
+        
+      } catch (error) {
+        console.error("Failed to connect Google Calendar:", error);
+        alert("Failed to connect Google Calendar. Please try again.");
+      } finally {
+        setLoadingGoogle(false);
+      }
+    }
+  }, [fetchGoogleEvents]);
+
+  // Initialize on mount
+  useEffect(() => {
+    const init = async () => {
+      checkGoogleConnection();
+      await handleOAuthCallback();
+      await fetchAllEvents();
+    };
+    init();
+  }, []); // Empty dependency array - only run once on mount
+
+  // Fetch all events
+  const fetchAllEvents = async () => {
+  setLoadingEvents(true);
+  try {
+    
+    const [dbEvents, googleEvents] = await Promise.all([
+      fetchDbEvents(),
+      isGoogleConnected ? fetchGoogleEvents() : Promise.resolve([])
+    ]);
+
+    const allEvents = [...dbEvents, ...googleEvents];
+    
+    setEvents(allEvents);
+  } catch (error) {
+    console.error("❌ Failed to fetch all events", error);
+    alert("Failed to fetch events from server.");
+  } finally {
+    setLoadingEvents(false);
+  }
+};
+
+  // Connect to Google Calendar
+  const connectGoogleCalendar = () => {
+    googleCalendarApi.initiateGoogleLogin();
+  };
+
+  // Disconnect Google Calendar
+  const disconnectGoogleCalendar = () => {
+    localStorage.removeItem('googleCalendarTokens');
+    setIsGoogleConnected(false);
+    setEvents(prev => prev.filter(event => !event.isGoogleEvent));
+  };
+
+  // Refresh Google events only
+  const refreshGoogleEvents = async () => {
+    if (!isGoogleConnected) {
+      alert("Please connect Google Calendar first");
+      return;
+    }
+
+    try {
+      const formattedGoogleEvents = await fetchGoogleEvents();
+      
+      setEvents(prev => [
+        ...prev.filter(e => !e.isGoogleEvent),
+        ...formattedGoogleEvents
+      ]);
+    } catch (error) {
+      console.error("Error refreshing Google events", error);
     }
   };
 
-  // Open popup for editing
+  // Refresh all events
+  const refreshAllEvents = async () => {
+    await fetchAllEvents();
+  };
+
+  // Event handlers
   const handleSelectEvent = (event) => {
     if (event.isGoogleEvent) {
-      alert("Google Calendar events are read-only");
+      alert("Google Calendar events are read-only. Please edit them directly in Google Calendar.");
       return;
     }
     setSelectedEvent({ ...event });
@@ -102,14 +249,12 @@ useEffect(() => {
     setIsOpenEvent(true);
   };
 
-  // Open popup for creating new event
   const handleSelectSlot = (slotInfo) => {
     setSelectedDate(slotInfo.start);
     setSelectedEvent(null);
     setIsOpenEvent(true);
   };
 
-  // Handle drag & drop
   const handleEventDrop = async ({ start, end, event }) => {
     if (event.isGoogleEvent) {
       alert("Cannot move Google Calendar events");
@@ -138,7 +283,6 @@ useEffect(() => {
       };
       
       await UpdateEvent(updatedEvent.id, payload);
-      console.log("✅ Event updated successfully");
     } catch (error) {
       console.error("❌ Backend update failed:", error);
       alert("Event updated locally but failed to save to server.");
@@ -166,12 +310,9 @@ useEffect(() => {
         await UpdateEvent(eventData.id, payload);
         
         const updatedEvent = {
-          id: eventData.id,
-          title: payload.Title,
-          description: payload.Description,
+          ...eventData,
           start: new Date(payload.StartDate),
           end: new Date(payload.EndDate),
-          userId: payload.UserId,
           isGoogleEvent: false,
         };
         
@@ -179,7 +320,6 @@ useEffect(() => {
           ev.id === updatedEvent.id ? updatedEvent : ev
         ));
         
-        console.log("✅ Event updated");
       } else {
         // Create new event
         const payload = {
@@ -199,10 +339,10 @@ useEffect(() => {
           end: new Date(response.EndDate),
           userId: response.UserId,
           isGoogleEvent: false,
+          source: 'local'
         };
         
         setEvents(prev => [...prev, newEvent]);
-        console.log("✅ Event created");
       }
       
       setIsOpenEvent(false);
@@ -217,7 +357,7 @@ useEffect(() => {
     const eventToDelete = events.find(ev => ev.id === eventId);
     
     if (eventToDelete?.isGoogleEvent) {
-      alert("Cannot delete Google Calendar events from here");
+      alert("Cannot delete Google Calendar events from here. Please delete them directly in Google Calendar.");
       return;
     }
     
@@ -227,7 +367,6 @@ useEffect(() => {
       await DeleteEvent(eventId);
       setEvents(prev => prev.filter(ev => ev.id !== eventId));
       setIsOpenEvent(false);
-      console.log("✅ Event deleted");
     } catch (error) {
       console.error("❌ Delete failed:", error);
       alert("Failed to delete event. Please try again.");
@@ -236,7 +375,8 @@ useEffect(() => {
 
   return (
     <div style={{ margin: "100px" }}>
-      <div className="mb-4 flex gap-4">
+      {/* Calendar Controls */}
+      <div className="mb-4 flex gap-4 items-center justify-between">
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-2">
             <div className="w-4 h-4 bg-blue-600 rounded"></div>
@@ -246,6 +386,42 @@ useEffect(() => {
             <div className="w-4 h-4 bg-green-600 rounded"></div>
             Google Events (Read-only)
           </span>
+        </div>
+        
+        <div className="flex gap-2">
+          <button 
+            onClick={refreshAllEvents}
+            disabled={loadingEvents}
+            className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50"
+          >
+            {loadingEvents ? "Refreshing..." : "Refresh All"}
+          </button>
+          
+          {!isGoogleConnected ? (
+            <button 
+              onClick={connectGoogleCalendar}
+              disabled={loadingGoogle}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+            >
+              {loadingGoogle ? "Connecting..." : "Connect Google Calendar"}
+            </button>
+          ) : (
+            <div className="flex gap-2">
+              <button 
+                onClick={refreshGoogleEvents}
+                disabled={loadingGoogle}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              >
+                {loadingGoogle ? "Refreshing..." : "Refresh Google"}
+              </button>
+              <button 
+                onClick={disconnectGoogleCalendar}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                Disconnect Google
+              </button>
+            </div>
+          )}
         </div>
       </div>
       
@@ -263,10 +439,13 @@ useEffect(() => {
             backgroundColor: event.isGoogleEvent ? "#34a853" : "#3174ad",
             color: "white",
             cursor: event.isGoogleEvent ? "default" : "pointer",
+            opacity: event.isGoogleEvent ? 0.8 : 1,
+            border: event.isGoogleEvent ? "1px solid #2e7d32" : "1px solid #1e5a8a",
           }
         })}
-        draggableAccessor={event => !event.isGoogleEvent} // ✅ Only local events draggable
+        draggableAccessor={event => !event.isGoogleEvent}
         style={{ height: "77vh" }}
+        popup
       />
       
       {isOpenEvent && (
