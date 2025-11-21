@@ -18,7 +18,7 @@ namespace smart_task_manager.Controllers
             _projectService = projectService;
         }
         //Get : get all projects
-        [Authorize(Roles = "Manager,User")]
+        //[Authorize(Roles = "Manager,User")]
         [HttpGet]
         public async Task<IActionResult> GetAllProjects()
         {

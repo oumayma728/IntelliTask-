@@ -15,11 +15,13 @@ namespace smart_task_manager.Controllers
     {
         private readonly IEventService _eventService;
         private readonly UserManager<User> _userManager;
+        //private readonly GoogleCalendarService _googleCalendarService;
 
         public EventController(IEventService eventService, UserManager<User> userManager)
         {
             _eventService = eventService;
             _userManager = userManager;
+            //_googleCalendarService = googleCalendarService;
         }
 
         // ✅ GET: /api/events
@@ -29,6 +31,7 @@ namespace smart_task_manager.Controllers
             var result = await _eventService.GetAll();
             return Ok(result);
         }
+
 
         // ✅ GET: /api/events/{id}
         [HttpGet("{id}")]
@@ -40,6 +43,17 @@ namespace smart_task_manager.Controllers
 
             return Ok(ev);
         }
+
+        /*[HttpPost("google-events")]
+        public async Task<IActionResult> CreateGoogleEvent([FromBody] Event ev)
+        {
+            if (ev.StartDate.HasValue && ev.EndDate.HasValue)
+            {
+                await _googleCalendarService.AddEventAsync(ev.Title, ev.StartDate.Value, ev.EndDate.Value);
+                return Ok(new { message = "Event added to Google Calendar!" });
+            }
+            return BadRequest("StartDate and EndDate are required.");
+        }*/
 
         // ✅ POST: /api/events
         [HttpPost]

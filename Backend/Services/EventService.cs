@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using smart_task_manager.Data;
 using smart_task_manager.Models;
+using smart_task_manager.Services;
 
 namespace smart_task_manager.Services
 {
@@ -23,6 +24,7 @@ namespace smart_task_manager.Services
         {
             _context = context;
             _notificationService = notificationService;
+
         }
 
         // ✅ GET all events
@@ -90,7 +92,6 @@ namespace smart_task_manager.Services
             existingEvent.StartDate = updatedEvent.StartDate;
             existingEvent.EndDate = updatedEvent.EndDate;
 
-            _context.Events.Update(existingEvent);
             await _context.SaveChangesAsync();
 
             /* Send notification for update

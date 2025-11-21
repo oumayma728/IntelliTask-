@@ -12,7 +12,9 @@ namespace smart_task_manager.Models
         public DateTime CreatedAt {  get; set; }
         public List<Project> Project { get; set; } = new();
         public string Mode { get; set; } = "personal";
-
+        public string? GoogleAccessToken { get; set; }
+        public string? GoogleRefreshToken { get; set; }
+        public DateTime? GoogleTokenExpiry { get; set; }
     }
 
 }

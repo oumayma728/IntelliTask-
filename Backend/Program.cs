@@ -1,16 +1,22 @@
 ﻿using smart_task_manager.Data;
 using smart_task_manager.Services;
 using smart_task_manager.Models;
-using Microsoft.AspNetCore.Identity; // Add this if missing
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens; // Add this if missing
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Text;
+using Google.Apis.Calendar.v3;
+using Google.Apis.Auth.AspNetCore3; 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 // Register database 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -32,25 +38,28 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IEventService, EventService>();
-
+//builder.Services.AddSingleton<GoogleCalendarService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddHostedService<DeadlineCheckerService>();
+
+// CORS - ✅ ADD .AllowCredentials()
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000") // Your React/Vue port
+        policy.WithOrigins("http://localhost:3000")
+              .AllowCredentials() // ✅ IMPORTANT: Add this for cookies
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
 });
-//Registers authentication services in your ASP.NET app.
+
+// ✅ AUTHENTICATION - Fixed syntax
 builder.Services.AddAuthentication(options =>
 {
-    //method of how should the app use to check a user’s identity by default    
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;//use JWT tokens in the Authorization header.
-                                                                                 //method of how should the app use if someone is not authorized
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; //means “if the token is missing or invalid, return 401 Unauthorized.
+    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = GoogleOpenIdConnectDefaults.AuthenticationScheme;
+
 })
 .AddJwtBearer(options =>
 {
@@ -60,34 +69,48 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"])
         ),
-        ValidateIssuer = true, // Change to true
-        ValidateAudience = true, // Change to true
-        ValidIssuer = builder.Configuration["Jwt:Issuer"], // Add this
-        ValidAudience = builder.Configuration["Jwt:Audience"], // Add this
-        ValidateLifetime = true, // Add this to validate expiration
-        ClockSkew = TimeSpan.Zero // Optional: remove time tolerance
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
     };
-});
+})
+.AddCookie() // ✅ ADD Cookie authentication BEFORE Google
+.AddGoogleOpenIdConnect(options =>
+{
+    options.ClientId = builder.Configuration["GoogleOAuth:ClientId"];
+    options.ClientSecret = builder.Configuration["GoogleOAuth:ClientSecret"];
+
+    options.Scope.Add(CalendarService.Scope.Calendar);
+    options.Scope.Add(CalendarService.Scope.CalendarEvents);
+
+    options.SaveTokens = true;
+    options.CallbackPath = "/signin-google";
+    options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+}); // ✅ Properly closed here
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // Keep PascalCase in JSON responses
         options.JsonSerializerOptions.PropertyNamingPolicy = null;
     });
+
 var app = builder.Build();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
 app.UseCors("AllowFrontend");
-
-
 app.UseHttpsRedirection();
+app.UseMiddleware<ErrorHandlerMiddleware>();
 
-app.UseAuthentication(); 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
