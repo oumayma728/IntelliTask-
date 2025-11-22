@@ -93,7 +93,7 @@ const KanbanBoard = () => {
               <option value="Done">Done</option>
             </select>
           </div>
-          <div className="text-gray-400 text-sm">
+          <div className=" text-sm">
             {filteredTasks.length} tasks found
           </div>
         </div>
@@ -132,7 +132,7 @@ const KanbanBoard = () => {
 
         {/* Empty State for Entire Board */}
         {filteredTasks.length === 0 && !editingTask && (
-          <div className="text-center text-gray-400 mt-8">
+          <div className="text-center  mt-8">
             <FaExclamationTriangle className="text-3xl mx-auto mb-2" />
             <p>No tasks match your filters.</p>
           </div>

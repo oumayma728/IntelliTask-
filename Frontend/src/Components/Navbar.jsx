@@ -2,16 +2,43 @@ import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../Context/AuthContext";
 import { useTheme } from "../Context/ThemeContext";
 import { FaMoon, FaSun } from "react-icons/fa";
-import ChatBot from "./AiHelper"
+import ChatBot from "./AiHelper";
+import useTasks from "../hooks/useTasks";
 export default function Navbar() {
     const [showNotifications, setShowNotifications] = useState(false);
     const [showChatBot, setShowChatBot] = useState(false);
+    const [Notifications, setNotifications] = useState([]);
 
     const { user } = useAuth();
     const { theme, toggleTheme } = useTheme();
 
     const [profileImage, setProfileImage] = useState(null);
     const fileInputRef = useRef(null);
+
+    const { tasks, fetchTasks } = useTasks();
+    useEffect(() => {
+        fetchTasks(); // fetch tasks when component mounts
+}, [fetchTasks]);
+
+// Check deadlines whenever tasks change
+useEffect(() => {
+  const checkDeadlines = () => {
+    const now = new Date();
+    const upcoming = tasks
+      .filter(task => !task.completed)
+      .filter(task => {
+        const due = new Date(task.dueDate);
+        const diff = due - now;
+        return diff > 0 && diff <= 60 * 60 * 1000; // 1 hour before
+      })
+      .map(task => ({ message: `Task "${task.title}" is due soon!` }));
+    setNotifications(upcoming);
+  };
+
+  checkDeadlines();
+  const interval = setInterval(checkDeadlines, 60 * 1000);
+  return () => clearInterval(interval);
+}, [tasks]);
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -46,8 +73,8 @@ export default function Navbar() {
                 <div className="flex justify-between items-center h-16">
                     <ul className="flex items-center space-x-6">
                         <li><a href="/" className="hover:text-blue-300 transition-colors duration-200 font-medium px-3 py-2 rounded-md">Home</a></li>
-                        {/*<li className="relative">
-                           <button onClick={() => setShowNotifications(!showNotifications)}
+                        <li className="relative sticky">
+                            <button onClick={() => setShowNotifications(!showNotifications)}
                                 className="hover:text-blue-300 transition-colors duration-200 font-medium px-3 py-2 rounded-md flex items-center gap-2">
                                 Notifications
                                 <svg
@@ -60,13 +87,21 @@ export default function Navbar() {
                                 </svg>
                             </button>
                             {showNotifications && (
-                                <div className="absolute mt-2 bg-white text-black p-3 rounded shadow-lg">
-                                    <p>No new notifications</p>
-                                    <p className="text-sm text-gray-500">Check back later!</p>
+                                <div className="absolute mt-2 w-64 bg-white text-black p-3 rounded shadow-lg">
+                                    {Notifications.length === 0 ? (
+                                        <p>No new notifications</p>
+                                    ) : (
+                                        Notifications.map((n, idx) => (
+                                            <div key={idx} className="border-b py-1">
+                                                {n.message}
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             )}
+
                         </li>
-                        <li><a href="/" className="hover:text-blue-200">Invite members</a></li>
+                        {/*<li><a href="/" className="hover:text-blue-200">Invite members</a></li>
                         <li><a href="/" className="hover:text-blue-200">Search</a></li>*/}
                     </ul>
                     <button

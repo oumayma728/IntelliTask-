@@ -135,7 +135,7 @@ export default function Tasks() {
   const formatDate = (dateString) => {
     if (!dateString) return "No date";
     const date = new Date(dateString);
-    return date.toLocaleDateString();
+    return date.toLocaleString();
   };
 
   const getStatusDisplayText = (status) => {
@@ -295,8 +295,8 @@ export default function Tasks() {
                   <td className="px-4 py-2">
                     {editingRow === task.Id ? (
                       <input
-                        type="date"
-                        value={task.DueDate || ""}
+                        type="datetime-local"
+                        value={task.DueDate ? new Date(task.DueDate).toISOString().slice(0,16) : ""}
                         onChange={(e) => handleChange(task.Id, "DueDate", e.target.value)}
                         className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 rounded border border-gray-300 dark:border-gray-600"
                       />

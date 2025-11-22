@@ -39,6 +39,7 @@ export default function useTasks() {
 
       await DeleteTask(taskId);
       setTasks((prev) => prev.filter((t) => t.Id !== taskId));
+      await fetchTasks();
     } catch (err) {
       setError(err.message);
     }

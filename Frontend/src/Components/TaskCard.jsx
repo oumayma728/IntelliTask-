@@ -101,7 +101,7 @@ const TaskCard = ({
     return (
         <div
             draggable={!task.isNew && updatingTaskId !== task.Id}
-            onDragStart={(e) => e.dataTransfer.setData("taskId", task.Id)}
+            onDragStart={(e) => e.dataTransfer.setData("taskId", task.Id.toString())}
             className={` p-3 rounded-lg mb-3 cursor-move hover: transition relative ${updatingTaskId === task.Id ? "opacity-50" : ""}`}
         >
             {updatingTaskId === task.Id && (

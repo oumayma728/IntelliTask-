@@ -21,7 +21,7 @@ const KanbanColumn = ({
     const handleDrop = async (e) => {
         e.preventDefault();
         const taskId = parseInt(e.dataTransfer.getData("taskId"));
-        const task = tasks.find(t => t.Id === taskId);
+        const task = tasks.find(t => t.Id.toString() === taskId);
         if (!task) return;
         try {
             await updateTask(task.Id, { ...task, Status: column.id });

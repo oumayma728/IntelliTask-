@@ -3,11 +3,9 @@ import api from "./api";
 const googleCalendarApi = {
     // Redirect to backend OAuth endpoint
     initiateGoogleLogin() {
-        console.log("🔄 Initiating Google Login...");
 
         const backendBaseURL = process.env.REACT_APP_API_URL ;
         const oauthUrl = `${backendBaseURL}/google-calendar/login`;
-
 
         // Save current location to return after OAuth
         localStorage.setItem('googleOAuthReturnUrl', window.location.pathname);
