@@ -1,17 +1,17 @@
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState ,useCallback} from "react";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import EventPopup from "./EventPopup";
-import { CreateEvent, DeleteEvent, GetAllevents, UpdateEvent } from "../api/EventApi";
-import googleCalendarApi from "../api/GoogleCalendarApi";
+import { UpdateEvent } from "../api/EventApi";
+import useEvents from "../hooks/useEvents";
+import useGoogleCalendar from "../hooks/useGoogleCalendar";
 const localizer = momentLocalizer(moment);
 const DnDCalendar = withDragAndDrop(Calendar);
 
 export default function MyCalendar() {
-  const [events, setEvents] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [isOpenEvent, setIsOpenEvent] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -19,105 +19,25 @@ export default function MyCalendar() {
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [loadingEvents, setLoadingEvents] = useState(false);
 
-  // Check if token is expired
-  const isTokenExpired = (tokens) => {
-    return Date.now() >= tokens.expiresAt;
-  };
+  const {
+    events,
+    setEvents,
+    fetchAllEvents,
+    handleSave,
+    handleDeleteEvent,
+    updateEventLocally,
+    refreshAllEvents
+  } = useEvents();
 
-  // Fetch DB events
-  const fetchDbEvents = async () => {
-    try {
-      const dbEvents = await GetAllevents();
-      return dbEvents
-        .filter(ev => ev.StartDate && ev.EndDate)
-        .map(ev => ({
-          id: ev.Id,
-          title: ev.Title || 'Untitled Event',
-          description: ev.Description || '',
-          start: new Date(ev.StartDate),
-          end: new Date(ev.EndDate),
-          userId: ev.UserId,
-          isGoogleEvent: false,
-          source: 'local'
-        }));
-    } catch (error) {
-      console.error("Error fetching DB events", error);
-      return [];
-    }
-  };
+  const {
 
- const fetchGoogleEvents = useCallback(async () => {
-    const savedTokens = localStorage.getItem('googleCalendarTokens');
-    if (!savedTokens) return [];
+    fetchGoogleEvents,
+    checkGoogleConnection,
+    connectGoogleCalendar,
+    disconnectGoogleCalendar
+  } = useGoogleCalendar();
 
-    try {
-      setLoadingGoogle(true);
-      let tokens = JSON.parse(savedTokens);
-      
-      // Refresh token if expired or about to expire (within 5 minutes)
-      if (isTokenExpired(tokens) || (tokens.expiresAt - Date.now()) < 300000) {
-        console.log("🔄 Refreshing Google token...");
-        const newTokens = await googleCalendarApi.refreshAccessToken(tokens.refreshToken);
-        tokens = {
-          ...tokens,
-          accessToken: newTokens.accessToken,
-          expiresAt: Date.now() + (newTokens.expiresIn * 1000)
-        };
-        localStorage.setItem('googleCalendarTokens', JSON.stringify(tokens));
-      }
 
-      const googleEvents = await googleCalendarApi.getGoogleEvents(tokens.accessToken);
-      
-      return googleEvents
-        .filter(ev => ev.Start && ev.End) 
-        .map((ev, index) => {
-   
-          return {
-            id: `google-${ev.Id || index}`, 
-            title: ev.Summary || "Google Event", // ✅ Capital 'S'
-            description: ev.Description || "", // ✅ Capital 'D'
-            start: new Date(ev.Start), // ✅ Direct date parsing
-            end: new Date(ev.End), // ✅ Direct date parsing
-            isGoogleEvent: true,
-            source: 'google',
-            googleEventId: ev.Id // ✅ Capital 'I'
-          };
-        });
-    } catch (error) {
-      console.error("Error fetching Google events", error);
-      
-      // If token is invalid, disconnect Google
-      if (error.response?.status === 401) {
-        disconnectGoogleCalendar();
-        alert("Google Calendar connection expired. Please reconnect.");
-      }
-      
-      return [];
-    } finally {
-      setLoadingGoogle(false);
-    }
-  }, []);
-
-  // Check Google connection status
-  const checkGoogleConnection = useCallback(() => {
-    const savedTokens = localStorage.getItem('googleCalendarTokens');
-    if (!savedTokens) {
-      setIsGoogleConnected(false);
-      return false;
-    }
-    
-    try {
-      const tokens = JSON.parse(savedTokens);
-      const isConnected = !isTokenExpired(tokens);
-      setIsGoogleConnected(isConnected);
-      return isConnected;
-    } catch (error) {
-      setIsGoogleConnected(false);
-      return false;
-    }
-  }, []);
-
-  // Handle OAuth callback
   const handleOAuthCallback = useCallback(async () => {
     const urlParams = new URLSearchParams(window.location.search);
     
@@ -171,48 +91,16 @@ export default function MyCalendar() {
     }
   }, [fetchGoogleEvents]);
 
-  // Initialize on mount
+  // runs once 
   useEffect(() => {
+
     const init = async () => {
       checkGoogleConnection();
       await handleOAuthCallback();
       await fetchAllEvents();
     };
     init();
-  }, []); // Empty dependency array - only run once on mount
-
-  // Fetch all events
-  const fetchAllEvents = async () => {
-  setLoadingEvents(true);
-  try {
-    
-    const [dbEvents, googleEvents] = await Promise.all([
-      fetchDbEvents(),
-      isGoogleConnected ? fetchGoogleEvents() : Promise.resolve([])
-    ]);
-
-    const allEvents = [...dbEvents, ...googleEvents];
-    
-    setEvents(allEvents);
-  } catch (error) {
-    console.error("❌ Failed to fetch all events", error);
-    alert("Failed to fetch events from server.");
-  } finally {
-    setLoadingEvents(false);
-  }
-};
-
-  // Connect to Google Calendar
-  const connectGoogleCalendar = () => {
-    googleCalendarApi.initiateGoogleLogin();
-  };
-
-  // Disconnect Google Calendar
-  const disconnectGoogleCalendar = () => {
-    localStorage.removeItem('googleCalendarTokens');
-    setIsGoogleConnected(false);
-    setEvents(prev => prev.filter(event => !event.isGoogleEvent));
-  };
+  }, []);
 
   // Refresh Google events only
   const refreshGoogleEvents = async () => {
@@ -222,9 +110,11 @@ export default function MyCalendar() {
     }
 
     try {
+      //get latest google events
       const formattedGoogleEvents = await fetchGoogleEvents();
-      
+
       setEvents(prev => [
+        //filter only google events
         ...prev.filter(e => !e.isGoogleEvent),
         ...formattedGoogleEvents
       ]);
@@ -233,10 +123,7 @@ export default function MyCalendar() {
     }
   };
 
-  // Refresh all events
-  const refreshAllEvents = async () => {
-    await fetchAllEvents();
-  };
+
 
   // Event handlers
   const handleSelectEvent = (event) => {
@@ -261,14 +148,14 @@ export default function MyCalendar() {
       return;
     }
 
-    const updatedEvent = { 
-      ...event, 
-      start: new Date(start), 
-      end: new Date(end) 
+    const updatedEvent = {
+      ...event,
+      start: new Date(start),
+      end: new Date(end)
     };
-    
+
     // Optimistic update
-    setEvents(prev => prev.map(ev => 
+    setEvents(prev => prev.map(ev =>
       ev.id === updatedEvent.id ? updatedEvent : ev
     ));
 
@@ -281,97 +168,19 @@ export default function MyCalendar() {
         EndDate: updatedEvent.end.toISOString(),
         UserId: updatedEvent.userId,
       };
-      
+
       await UpdateEvent(updatedEvent.id, payload);
     } catch (error) {
       console.error("❌ Backend update failed:", error);
       alert("Event updated locally but failed to save to server.");
       // Revert on failure
-      setEvents(prev => prev.map(ev => 
+      setEvents(prev => prev.map(ev =>
         ev.id === event.id ? event : ev
       ));
     }
   };
 
-  // Handle save from popup
-  const handleSave = async (eventData) => {
-    try {
-      if (eventData.id) {
-        // Update existing event
-        const payload = {
-          Id: eventData.id,
-          Title: eventData.title || eventData.Title,
-          Description: eventData.description || eventData.Description || '',
-          StartDate: new Date(eventData.StartDate).toISOString(),
-          EndDate: new Date(eventData.EndDate).toISOString(),
-          UserId: eventData.userId || eventData.UserId,
-        };
-        
-        await UpdateEvent(eventData.id, payload);
-        
-        const updatedEvent = {
-          ...eventData,
-          start: new Date(payload.StartDate),
-          end: new Date(payload.EndDate),
-          isGoogleEvent: false,
-        };
-        
-        setEvents(prev => prev.map(ev => 
-          ev.id === updatedEvent.id ? updatedEvent : ev
-        ));
-        
-      } else {
-        // Create new event
-        const payload = {
-          Title: eventData.title || eventData.Title || 'Untitled',
-          Description: eventData.description || eventData.Description || '',
-          StartDate: new Date(eventData.StartDate).toISOString(),
-          EndDate: new Date(eventData.EndDate).toISOString(),
-        };
-        
-        const response = await CreateEvent(payload);
-        
-        const newEvent = {
-          id: response.Id,
-          title: response.Title,
-          description: response.Description,
-          start: new Date(response.StartDate),
-          end: new Date(response.EndDate),
-          userId: response.UserId,
-          isGoogleEvent: false,
-          source: 'local'
-        };
-        
-        setEvents(prev => [...prev, newEvent]);
-      }
-      
-      setIsOpenEvent(false);
-    } catch (error) {
-      console.error("❌ Save failed:", error);
-      alert("Failed to save event. Please try again.");
-    }
-  };
 
-  // Delete event
-  const handleDeleteEvent = async (eventId) => {
-    const eventToDelete = events.find(ev => ev.id === eventId);
-    
-    if (eventToDelete?.isGoogleEvent) {
-      alert("Cannot delete Google Calendar events from here. Please delete them directly in Google Calendar.");
-      return;
-    }
-    
-    if (!window.confirm("Are you sure you want to delete this event?")) return;
-    
-    try {
-      await DeleteEvent(eventId);
-      setEvents(prev => prev.filter(ev => ev.id !== eventId));
-      setIsOpenEvent(false);
-    } catch (error) {
-      console.error("❌ Delete failed:", error);
-      alert("Failed to delete event. Please try again.");
-    }
-  };
 
   return (
     <div style={{ margin: "100px" }}>
@@ -387,18 +196,18 @@ export default function MyCalendar() {
             Google Events (Read-only)
           </span>
         </div>
-        
+
         <div className="flex gap-2">
-          <button 
+          <button
             onClick={refreshAllEvents}
             disabled={loadingEvents}
             className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50"
           >
             {loadingEvents ? "Refreshing..." : "Refresh All"}
           </button>
-          
+
           {!isGoogleConnected ? (
-            <button 
+            <button
               onClick={connectGoogleCalendar}
               disabled={loadingGoogle}
               className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
@@ -407,14 +216,14 @@ export default function MyCalendar() {
             </button>
           ) : (
             <div className="flex gap-2">
-              <button 
+              <button
                 onClick={refreshGoogleEvents}
                 disabled={loadingGoogle}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
               >
                 {loadingGoogle ? "Refreshing..." : "Refresh Google"}
               </button>
-              <button 
+              <button
                 onClick={disconnectGoogleCalendar}
                 className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
               >
@@ -424,9 +233,9 @@ export default function MyCalendar() {
           )}
         </div>
       </div>
-      
+
       <DnDCalendar
-        selectable
+        selectable //Allows clicking on empty dates to create an event
         localizer={localizer}
         events={events}
         startAccessor="start"
@@ -447,7 +256,7 @@ export default function MyCalendar() {
         style={{ height: "77vh" }}
         popup
       />
-      
+
       {isOpenEvent && (
         <EventPopup
           isOpen={isOpenEvent}
