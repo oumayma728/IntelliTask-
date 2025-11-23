@@ -1,5 +1,16 @@
-export default function Settings (){
-    <div>
-        <h1>Settings</h1>
-    </div>
+import Navbar from "../Components/Navbar";
+import Sidebar from "../Components/Sidebar";
+import Profile from "../Components/Profile";
+export default function Task() {
+    return (
+        <div className="flex h-screen ">
+            <Sidebar />
+            <div className="flex flex-col flex-1 overflow-hidden">
+                <Navbar />
+                <div className="flex-1 overflow-auto p-4">
+                    <Profile />
+                </div>
+            </div>
+        </div>
+    );
 }

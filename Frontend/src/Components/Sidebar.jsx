@@ -4,7 +4,7 @@ import { useAuth } from "../Context/AuthContext";
 import { MdOutlineMenuOpen } from "react-icons/md";
 import {
   FaHome, FaTasks, FaProjectDiagram, FaCalendarAlt,
-  FaUsers, FaCog, FaSignOutAlt, FaUserCircle
+  FaUsers, FaCog, FaSignOutAlt, FaUserCircle,FaBug 
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -23,8 +23,8 @@ export default function Sidebar() {
   const menuItems = [
     { icon: <FaTasks size={20} />, label: 'Tasks', path: '/Task' },
     { icon: <FaCalendarAlt size={20} />, label: 'Calendar', path: '/Calendar' },
-    {  label: 'Bug Tracker', path: '/' },
-    { icon: <FaCog size={20} />, label: 'Settings' },
+    { icon: <FaBug size={20} />, label: 'Bug Tracker' },
+    { icon: <FaCog size={20} />, label: 'Settings' , path :'/Settings'},
     { icon: <FaSignOutAlt size={20} />, label: 'Logout', action: "logout" },
   ];
 
