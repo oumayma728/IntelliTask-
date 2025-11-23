@@ -62,7 +62,6 @@ useEffect(() => {
         if (savedImage) setProfileImage(savedImage);
     }, []);
 
-    console.log("User from context:", user);
 
     console.log("User name:", user?.token?.username);
     return (
