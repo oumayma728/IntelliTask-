@@ -10,8 +10,7 @@ const KanbanColumn = ({
     addTask,
     fetchTasks,
     updatingTaskId,
-    columns
-}) => {
+    columns }) => {
 
     const handleDragOver = (e) => {
         e.preventDefault();
@@ -20,17 +19,38 @@ const KanbanColumn = ({
 
     const handleDrop = async (e) => {
         e.preventDefault();
-        const taskId = parseInt(e.dataTransfer.getData("taskId"));
-        const task = tasks.find(t => t.Id.toString() === taskId);
-        if (!task) return;
+        let draggedTask = null; //create variable to hold dragged task
+
         try {
-            await updateTask(task.Id, { ...task, Status: column.id });
+           // Try to get full task payload first 
+            const raw = e.dataTransfer.getData("task");
+            if (raw) {
+                draggedTask = JSON.parse(raw);
+            }
+        } catch (err) {
+            console.error("Failed to parse task JSON:", err);
+        }
+
+        // Fallback to taskId lookup if JSON not available
+        if (!draggedTask) {
+            const rawId = e.dataTransfer.getData("taskId");
+            if (rawId) {
+                const id = isNaN(Number(rawId)) ? rawId : Number(rawId);
+                draggedTask = tasks.find(t => t.Id === id || String(t.Id) === String(id)) || null;
+            }
+        }
+
+        if (!draggedTask) return;
+
+        try {
+            // Update the task's status to this column's id
+            await updateTask(draggedTask.Id, { ...draggedTask, Status: column.id });
             await fetchTasks();
         } catch (error) {
             console.error(error);
         }
     };
-
+// Function to handle adding a new task
     const handleAddTask = () => {
         const newTask = {
             Id: Date.now(),

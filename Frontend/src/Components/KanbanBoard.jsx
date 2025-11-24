@@ -18,8 +18,8 @@ const KanbanBoard = () => {
   const { showLoader, hideLoader } = useLoader();
 
   const columns = [
-    { id: "To Do", title: "To Do", color: "bg-blue-600" },
-    { id: "In Progress", title: "In Progress", color: "bg-yellow-600" },
+    { id: "ToDo", title: "To Do", color: "bg-blue-600" },
+    { id: "InProgress", title: "In Progress", color: "bg-yellow-600" },
     { id: "Done", title: "Done", color: "bg-green-600" },
   ];
 
@@ -54,7 +54,7 @@ const KanbanBoard = () => {
 
   return (
     <div className="min-h-screen flex flex-col justify-start p-8">
-      
+
       {/* Top Nav / Tabs */}
       <nav className="w-full border-b border-gray-700  top-0 z-10">
         <div className="px-8 pt-6 pb-2">
@@ -66,10 +66,36 @@ const KanbanBoard = () => {
         </div>
 
         {/* Buttons */}
-        <div className="flex items-center px-8 space-x-8 border-b border-gray-700 pb-2">
-          <button onClick={() => navigate("/Task")} className=" hover:text-white pb-2">Table</button>
-          <button className="border-b-2 border-blue-500 pb-2  font-medium">Kanban</button>
-          <button onClick={() => navigate("/Calendar")} className=" hover:text-white pb-2">Calendar</button>
+        <div className="flex items-center px-8 space-x-8 border-b border-gray-300 dark:border-gray-700 pb-2">
+          {/* Tabs */}
+          <button
+            onClick={() => navigate("/TaskList")}
+            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+          >
+            Table
+          </button>
+
+          <button
+            onClick={() => navigate("/Kanban")}
+            className="
+pb-2 font-medium border-b-2 border-blue-500 text-gray-900 dark:text-white
+    "
+          >
+            Kanban
+          </button>
+
+          <button
+            onClick={() => navigate("/Calendar")}
+            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+          >
+            Calendar
+          </button>
+
+          <button
+            className="pb-2 text-xl font-bold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+          >
+            +
+          </button>
         </div>
 
         {/* Search & Filter */}
