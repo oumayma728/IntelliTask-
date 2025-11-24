@@ -78,14 +78,15 @@ export default function Tasks() {
       prevTasks.map(t => t.Id === taskId ? { ...t, Status: newStatus } : t)
     );
     try {
-      await UpdateTask({
-        Id: taskId,
+      // UpdateTask expects (id, updatedTask)
+      await UpdateTask(taskId, {
         Title: task.Title,
         Description: task.Description,
         DueDate: task.DueDate,
         ProjectName: task.ProjectName,
         Status: newStatus,
       });
+      console.log(`Task ${taskId} status updated -> ${newStatus}`);
     } catch (error) {
       console.error("Error updating task status:", error);
       setTasksState(prevTasks =>
@@ -285,7 +286,7 @@ export default function Tasks() {
 
           {Object.entries(groupedTasks).map(([projectName, projectTasks]) => (
             <>
-              {/* Project Header Row - text color fix */}
+
               <tr
                 key={`project-${projectName}`}
                 className="cursor-pointer text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -299,7 +300,6 @@ export default function Tasks() {
                       <span>▶</span>
                     )}
                     <span className="font-semibold">{projectName}</span>
-                    {/* Text color fix for task count */}
                     <span className="text-gray-500 dark:text-gray-400 text-sm">({projectTasks.length} tasks)</span>
                   </div>
                 </td>
