@@ -101,7 +101,15 @@ const TaskCard = ({
     return (
         <div
             draggable={!task.isNew && updatingTaskId !== task.Id}
-            onDragStart={(e) => e.dataTransfer.setData("taskId", task.Id.toString())}
+            onDragStart={(e) => {
+                // provide full task payload and an id fallback
+                try {
+                    e.dataTransfer.setData("task", JSON.stringify(task));
+                } catch (err) {
+                    // ignore
+                }
+                e.dataTransfer.setData("taskId", String(task.Id));
+            }}
             className={` p-3 rounded-lg mb-3 cursor-move hover: transition relative ${updatingTaskId === task.Id ? "opacity-50" : ""}`}
         >
             {updatingTaskId === task.Id && (
@@ -141,9 +149,9 @@ const TaskCard = ({
                                 key={col.id}
                                 onClick={() => handleStatusChange(col.id)}
                                 disabled={updatingTaskId === task.Id}
-                                className={`text-xs px-2 py-1 rounded flex-1 ${col.id === "In Progress"
+                                className={`text-xs px-2 py-1 rounded flex-1 ${col.id === "ToDo"
                                     ? "bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800"
-                                    : col.id === "To Do"
+                                    : col.id === "InProgress"
                                         ? "bg-yellow-600 hover:bg-yellow-500 disabled:bg-yellow-800"
                                         : "bg-green-600 hover:bg-green-500 disabled:bg-green-800"
                                     } disabled:opacity-50 disabled:cursor-not-allowed`}
