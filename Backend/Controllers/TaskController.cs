@@ -5,6 +5,8 @@ using smart_task_manager.DTOs;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using smart_task_manager.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace smart_task_manager.Controllers
 {
@@ -14,9 +16,11 @@ namespace smart_task_manager.Controllers
     {
         private readonly ITaskService _taskService;
         private readonly UserManager<User> _userManager;
+        private readonly AppDbContext _context;
 
-        public TaskController(ITaskService taskService , UserManager<User> userManager)
+        public TaskController(ITaskService taskService, UserManager<User> userManager, AppDbContext context)
         {
+            _context = context;
             _taskService = taskService;
             _userManager = userManager;
         }
@@ -24,7 +28,7 @@ namespace smart_task_manager.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllTasks()
         {
-           var  result = await _taskService.GetAll();
+            var result = await _taskService.GetAll();
             return Ok(result);
 
         }
@@ -38,27 +42,27 @@ namespace smart_task_manager.Controllers
 
 
         [HttpPost]
-         public async Task<IActionResult> CreateTask([FromBody] CreateTaskDto dto)
-    {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        
-
-        var task = new TaskItem
+        public async Task<IActionResult> CreateTask([FromBody] CreateTaskDto dto)
         {
-            Title = dto.Title,
-            DueDate = dto.DueDate,
-            ProjectName = dto.ProjectName,
-            Description = dto.Description,
-            Status = dto.Status
-        };
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var newTask = await _taskService.CreateTask(task, userId);
-        return Ok(newTask);
-    }
+
+
+            var task = new TaskItem
+            {
+                Title = dto.Title,
+                DueDate = dto.DueDate,
+                ProjectName = dto.ProjectName,
+                Description = dto.Description,
+                Status = dto.Status
+            };
+
+            var newTask = await _taskService.CreateTask(task, userId);
+            return Ok(newTask);
+        }
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTask(int id)
-        {   
+        {
             var result = await _taskService.DeleteTask(id);
             if (result)
             {
@@ -84,6 +88,57 @@ namespace smart_task_manager.Controllers
                 return Ok($"Task with ID {id} was updated successfully.");
             else
                 return BadRequest($"Failed to update task with ID {id}.");
+        }
+
+        [HttpGet("summary")]
+        public async Task<ActionResult<TaskSummaryDto>> GetSummary()
+        {
+            var total = await _context.Tasks.CountAsync();
+            var completed = await _context.Tasks.CountAsync(t => t.Status == "Done");
+            var overdue = await _context.Tasks.CountAsync(t => t.Status == "InProgress" && t.DueDate < DateTime.Now);
+
+            var Summary = new TaskSummaryDto
+            {
+                Total = total,
+                Completed = completed,
+                Overdue = overdue,
+            };
+
+            return Ok(Summary);
+        }
+
+        [HttpGet("upcoming")]
+        public async Task<ActionResult<IEnumerable<Task>>> GetUpcomingTasks()
+        {
+            var today = DateTime.Today;
+            var nextDays = today.AddDays(2);
+
+            var tasks = await _context.Tasks
+                .Where(t => t.Status == "InProgress" && t.DueDate >= today && t.DueDate <= nextDays)
+                .OrderBy(t => t.DueDate)
+                .ToListAsync(); ;
+
+            return Ok(tasks);
+        }
+
+        [HttpGet("productivity")]
+        public async Task<ActionResult<IEnumerable<object>>> GetProductivity()
+        {
+            //data for last 7 days
+            var startDate = DateTime.Today.AddDays(-6);
+
+            var completedTasks = await _context.Tasks
+                .Where(t => t.Status == "Done" && t.DueDate >= startDate)
+                .ToListAsync();
+
+            var chartData = Enumerable.Range(0, 7).Select(i =>
+            {
+                var day = startDate.AddDays(i);
+                var count = completedTasks.Count(t => t.DueDate.Value.Date == day.Date);
+                return new { day = day.DayOfWeek.ToString(), completed = count };
+            }).ToList();
+
+            return Ok(chartData);
         }
 
     }
