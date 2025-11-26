@@ -9,19 +9,34 @@ export function AuthProvider({ children }) {
     const [mode, setMode] = useState(null);
 
     useEffect(() => {
-        if (token) {
+        if (!token) return;
+
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
             try {
-                const decoded = jwtDecode(token);
-                setUser({
-                    email: decoded.email,
-                    username: decoded.username || decoded.unique_name || decoded.name
-                });
-                setMode(decoded.mode || null);
-            } catch (err) {
-                console.error("Failed to decode token", err);
-                setUser(null);
+                setUser(JSON.parse(storedUser));
+            } catch (e) {
+                // if parsing fails, fall back to decoding token
+                console.warn("Failed to parse stored user, decoding token instead.", e);
             }
         }
+
+        if (!storedUser) {
+            try {
+                const decoded = jwtDecode(token);
+                const userFromToken = {
+                    id: decoded.id ?? decoded.sub ?? decoded.userId ?? null,
+                    email: decoded.email ?? decoded.em ?? null,
+                    username: decoded.username ?? decoded.name ?? null,
+                };
+                setUser(userFromToken);
+                localStorage.setItem("user", JSON.stringify(userFromToken));
+            } catch (err) {
+                console.error("Failed to decode token:", err);
+            }
+        }
+
+        setMode(localStorage.getItem("mode"));
     }, [token]);
 
     const logout = () => {
@@ -32,7 +47,12 @@ export function AuthProvider({ children }) {
     };
     const loginUser = (tokenData) => {
         setToken(tokenData.Token);
-        setUser({ email: tokenData.email, username: tokenData.username });
+        setUser({ 
+            id: tokenData.id,
+            email: tokenData.email, 
+            username: tokenData.username 
+            
+        });
         setMode(tokenData.Mode);
 
         localStorage.setItem("token", tokenData.Token);
