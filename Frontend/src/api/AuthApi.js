@@ -26,3 +26,13 @@ export const register = async (email, password, mode = "personal") => {
     } throw error;
   }
 };
+export const ChangePassword = async (userId, currentPassword, newPassword) => {
+  try{
+    const response = await api.post("/auth/ChangePassword", { userId, currentPassword, newPassword });
+    return response.data;
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.error(" Change Password Error:", error.response?.data || error.message);
+    } throw error;    
+  }
+};
