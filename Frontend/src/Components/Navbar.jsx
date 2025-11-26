@@ -63,7 +63,6 @@ useEffect(() => {
     }, []);
 
 
-    console.log("User name:", user?.token?.username);
     return (
 
         <nav className="shadow-lg bg-gray-100 dark:bg-gray-800 text-black dark:text-white transition-colors duration-300">
