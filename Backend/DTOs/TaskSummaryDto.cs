@@ -5,5 +5,6 @@ namespace smart_task_manager.DTOs
         public int Total { get; set; }
         public int Completed { get; set; }
         public int Overdue { get; set; }
+        public int toDo{ get; set; }
     }
 }
