@@ -96,19 +96,21 @@ namespace smart_task_manager.Controllers
             var total = await _context.Tasks.CountAsync();
             var completed = await _context.Tasks.CountAsync(t => t.Status == "Done");
             var overdue = await _context.Tasks.CountAsync(t => t.Status == "InProgress" && t.DueDate < DateTime.Now);
-
+            var toDo = await _context.Tasks.CountAsync(t => t.Status == "ToDo");
             var Summary = new TaskSummaryDto
             {
+
                 Total = total,
                 Completed = completed,
                 Overdue = overdue,
+                toDo = toDo
             };
 
             return Ok(Summary);
         }
 
         [HttpGet("upcoming")]
-        public async Task<ActionResult<IEnumerable<Task>>> GetUpcomingTasks()
+        public async Task<ActionResult> GetUpcomingTasks()
         {
             var today = DateTime.Today;
             var nextDays = today.AddDays(2);
@@ -116,9 +118,14 @@ namespace smart_task_manager.Controllers
             var tasks = await _context.Tasks
                 .Where(t => t.Status == "InProgress" && t.DueDate >= today && t.DueDate <= nextDays)
                 .OrderBy(t => t.DueDate)
-                .ToListAsync(); ;
+                .ToListAsync();
 
-            return Ok(tasks);
+            if (tasks.Count == 0)
+            {
+                return Ok(new { message = "No upcoming tasks in the next 2 days." });
+            }
+
+            return Ok(new { message = "Upcoming tasks found.", data = tasks });
         }
 
         [HttpGet("productivity")]
@@ -128,13 +135,13 @@ namespace smart_task_manager.Controllers
             var startDate = DateTime.Today.AddDays(-6);
 
             var completedTasks = await _context.Tasks
-                .Where(t => t.Status == "Done" && t.DueDate >= startDate)
+                .Where(t => t.Status == "Done" && t.DueDate.HasValue && t.DueDate.Value >= startDate)
                 .ToListAsync();
 
             var chartData = Enumerable.Range(0, 7).Select(i =>
             {
                 var day = startDate.AddDays(i);
-                var count = completedTasks.Count(t => t.DueDate.Value.Date == day.Date);
+                var count = completedTasks.Count(t => t.DueDate.HasValue && t.DueDate.Value.Date == day.Date);
                 return new { day = day.DayOfWeek.ToString(), completed = count };
             }).ToList();
 
