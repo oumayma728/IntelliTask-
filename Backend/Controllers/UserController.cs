@@ -3,6 +3,7 @@ using smart_task_manager.Models;
 using smart_task_manager.DTOs;
 using Microsoft.AspNetCore.Identity;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore; 
 
 namespace smart_task_manager.Controllers
 {
@@ -17,6 +18,18 @@ namespace smart_task_manager.Controllers
             _userManager = userManager;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await _userManager.Users.ToListAsync();
+            return Ok(users);
+        }
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetUserById(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            return Ok(user);
+        }
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(string id, [FromBody] UpdateUserDto dto)
         {
