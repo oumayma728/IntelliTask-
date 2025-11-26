@@ -3,7 +3,7 @@ import logo from "../logo-Photoroom.png";
 import { useAuth } from "../Context/AuthContext";
 import { MdOutlineMenuOpen } from "react-icons/md";
 import {
-  FaHome, FaTasks, FaProjectDiagram, FaCalendarAlt,
+  FaHome, FaTasks, FaChartBar, FaCalendarAlt,
   FaUsers, FaCog, FaSignOutAlt, FaUserCircle,FaBug 
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
@@ -23,7 +23,7 @@ export default function Sidebar() {
   const menuItems = [
     { icon: <FaTasks size={20} />, label: 'Tasks', path: '/Task' },
     { icon: <FaCalendarAlt size={20} />, label: 'Calendar', path: '/Calendar' },
-    { icon: <FaBug size={20} />, label: 'Bug Tracker' },
+    { icon: <FaChartBar size={20} />, label: 'Widgets' , path :'/Widgets'},
     { icon: <FaCog size={20} />, label: 'Settings' , path :'/Settings'},
     { icon: <FaSignOutAlt size={20} />, label: 'Logout', action: "logout" },
   ];
