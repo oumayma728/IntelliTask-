@@ -7,7 +7,9 @@ namespace smart_task_manager.Models
         User
     }
     public class User:IdentityUser
+
     {
+        public string? PhoneNumber;
         public UserRole Role { get; set; } =  UserRole.User;
         public DateTime CreatedAt {  get; set; }
         public List<Project> Project { get; set; } = new();
