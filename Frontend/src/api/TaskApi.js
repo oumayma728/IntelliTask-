@@ -54,3 +54,36 @@ export const UpdateTask = async (id, updatedTask) => {
     }
 };
 
+export const GetSummary = async () => {
+    try{
+        const response = await api.get(`/tasks/summary`)
+        return response.data    
+    } catch (error) {
+        if (process.env.NODE_ENV === "development") {
+            console.error("Get summary error:", error.response?.data || error.message);
+        } throw error;
+    }
+}
+
+export const GetUpcomingTasks = async () => {
+    try{
+        const response = await api.get(`/tasks/upcoming`)       
+        return response.data
+    } catch (error) {
+        if (process.env.NODE_ENV === "development") {
+            console.error("Get upcoming tasks error:", error.response?.data || error.message);
+        }
+        throw error;
+    } 
+}
+export const Productivity = async () =>{
+    try{
+        const response = await api.get(`/tasks/productivity`)       
+        return response.data
+    } catch (error) {       
+        if (process.env.NODE_ENV === "development") {
+            console.error("Get productivity error:", error.response?.data || error.message);
+        }
+        throw error;
+    }
+}
