@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using smart_task_manager.Services;
 using smart_task_manager.DTOs;
-using BCrypt.Net;
+using smart_task_manager.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using smart_task_manager.Data;
@@ -55,21 +55,14 @@ namespace smart_task_manager.Controllers
             if (user == null)
                 return NotFound(new { message = "User not found." });
 
-            // 2. Normalize the hash to avoid "Invalid salt version"
-            var storedHash = user.PasswordHash;
-            if (storedHash.StartsWith("$2y$"))
-            {
-                storedHash = storedHash.Replace("$2y$", "$2a$");
-            }
-
-            // 3. Verify the current password
-            bool isCurrentPasswordValid = BCrypt.Net.BCrypt.Verify(model.CurrentPassword, storedHash);
-            if (!isCurrentPasswordValid)
-                return BadRequest(new { message = "Current password is incorrect." });
+            var passwordHasher = new PasswordHasher<User>();
+            // 3. Verify the current password with asp.net identity
+            var verificationResult = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, model.CurrentPassword);
+            if (verificationResult == PasswordVerificationResult.Failed)
+                return BadRequest(new { message = "Current password is incorrect" });
 
             // 4. Hash the new password and update the user
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
-
+            user.PasswordHash = passwordHasher.HashPassword(user, model.NewPassword);
             await _context.SaveChangesAsync();
 
             // 5. Return success
