@@ -28,6 +28,7 @@ export function AuthProvider({ children }) {
                     id: decoded.id ?? decoded.sub ?? decoded.userId ?? null,
                     email: decoded.email ?? decoded.em ?? null,
                     username: decoded.username ?? decoded.name ?? null,
+                    
                 };
                 setUser(userFromToken);
                 localStorage.setItem("user", JSON.stringify(userFromToken));
@@ -46,17 +47,21 @@ export function AuthProvider({ children }) {
         setMode(null);
     };
     const loginUser = (tokenData) => {
+        const decoded = jwtDecode(token);
+const userObj = {
+    id: decoded.id ?? decoded.sub ?? decoded.userId ?? null,
+    email: decoded.email ?? decoded.em ?? "",
+    username: decoded.username ?? decoded.name ?? ""
+};
+
+        console.log("TOKEN DATA FROM BACKEND:", tokenData);
+
         setToken(tokenData.Token);
-        setUser({ 
-            id: tokenData.id,
-            email: tokenData.email, 
-            username: tokenData.username 
-            
-        });
+        setUser(userObj);
         setMode(tokenData.Mode);
 
         localStorage.setItem("token", tokenData.Token);
-        localStorage.setItem("user", JSON.stringify({ email: tokenData.email, username: tokenData.username }));
+        localStorage.setItem("user", JSON.stringify(userObj));
         localStorage.setItem("mode", tokenData.Mode);
     };
 
