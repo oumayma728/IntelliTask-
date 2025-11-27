@@ -3,12 +3,14 @@ import { useEffect, useState, useRef } from "react";
 import { useAuth } from "../Context/AuthContext";
 import { ChangePassword } from "../api/AuthApi";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import {jwtDecode} from "jwt-decode";
+import { coerceAndCheckDataType } from "ajv/dist/compile/validate/dataType";
 
 export default function ProfileSettings({ userId, userData, profileImage }) {
     const fileInputRef = useRef(null);
-    const { user, setUser } = useAuth();
-
+    const { user, setUser , token} = useAuth();
+    const navigate = useNavigate();
     const sourceUser = userData || user || {};
     const [showPassword, setShowPassword] = useState(false);
 
@@ -54,8 +56,11 @@ export default function ProfileSettings({ userId, userData, profileImage }) {
             phoneNumber: phoneNumber,
         };
         try {
-            const idToUpdate = userId || sourceUser.id || sourceUser.Id || user?.id || user?.Id;
-            if (!idToUpdate) {
+let idToUpdate = userId || user?.id || sourceUser.id || sourceUser.Id || user?.id || user?.Id;// this now works
+            if (!idToUpdate && token ) {
+                const decoded = jwtDecode(token);
+        idToUpdate = decoded.id || decoded.sub || decoded.userid || decoded.nameid;
+
                 console.error('No user id available to update');
                 return;
             }
@@ -70,35 +75,32 @@ export default function ProfileSettings({ userId, userData, profileImage }) {
     };
 
     const changePassword = async () => {
-        // Basic validations
-        if (!CurrentPassword || !NewPassword) {
-            alert("Please fill both current and new password fields.");
-            return;
-        }
-        if (CurrentPassword === NewPassword) {
-            alert("New password must be different from the current password.");
-            return;
-        }
+    if (!CurrentPassword || !NewPassword) {
+        alert("Please fill both current and new password fields.");
+        return;
+    }
+    if (CurrentPassword === NewPassword) {
+        alert("New password must be different from the current password.");
+        return;
+    }
 
-        const idToUpdate = userId || sourceUser.id || sourceUser.Id || user?.id || user?.Id;
-            if (!idToUpdate) {
-                console.error('No user id available to update');
-                return;
-            }
+    // Get the user ID from props, context, or token
+    const idToUpdate = userId || sourceUser.id || sourceUser.Id || user?.id || user?.Id;
+    
 
-        try {
-            const result = await ChangePassword(idToUpdate, CurrentPassword, NewPassword);
-            // API may return a message or user object; show success message
-            alert(result?.message || "Password changed successfully.");
-            setCurrentPassword("");
-            setNewPassword("");
-            Navigate("/");  
-        } catch (error) {
-            const serverMsg = error.response?.data?.message || error.response?.data || error.message;
-            console.error("Change password error:", error);
-            alert(serverMsg || "Failed to change password. Please try again.");
-        }
-    };
+    try {
+        const result = await ChangePassword(idToUpdate, CurrentPassword, NewPassword);
+        alert(result?.message || "Password changed successfully.");
+        setCurrentPassword("");
+        setNewPassword("");
+        navigate("/");
+    } catch (error) {
+        const serverMsg = error.response?.data?.message || error.response?.data || error.message;
+        console.error("Change password error:", error);
+        alert(serverMsg || "Failed to change password. Please try again.");
+    }
+};
+
     return (
         <div className="grid grid-cols-1 gap-6 max-w-4xl mx-auto">
             <div className="flex items-center justify-between p-6">
