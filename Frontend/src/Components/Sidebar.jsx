@@ -18,7 +18,7 @@ export default function Sidebar() {
     logout();              // remove token from localStorage
     navigate("/login");    // redirect user to login page
   };
-console.log(user?.email);
+console.log("USER IN SIDEBAR:", user);
 
   const location = useLocation();
   const menuItems = [

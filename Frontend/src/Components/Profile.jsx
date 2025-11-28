@@ -20,6 +20,7 @@ export default function ProfileSettings({ userId, userData, profileImage }) {
     const [phoneNumber, setPhoneNumber] = useState(sourceUser.phoneNumber || "");
     const [CurrentPassword, setCurrentPassword] = useState("");
     const [NewPassword, setNewPassword] = useState("");
+    //for the image upload
     const handleImageChange = (e) => {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
