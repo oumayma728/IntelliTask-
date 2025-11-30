@@ -4,7 +4,9 @@ import { useTheme } from "../Context/ThemeContext";
 import { FaMoon, FaSun } from "react-icons/fa";
 import ChatBot from "./AiHelper";
 import useTasks from "../hooks/useTasks";
+
 export default function Navbar() {
+
     const [showNotifications, setShowNotifications] = useState(false);
     const [showChatBot, setShowChatBot] = useState(false);
     const [Notifications, setNotifications] = useState([]);
@@ -18,27 +20,31 @@ export default function Navbar() {
     const { tasks, fetchTasks } = useTasks();
     useEffect(() => {
         fetchTasks(); // fetch tasks when component mounts
-}, [fetchTasks]);
+    }, [fetchTasks]);
 
-// Check deadlines whenever tasks change
-useEffect(() => {
-  const checkDeadlines = () => {
-    const now = new Date();
-    const upcoming = tasks
-      .filter(task => !task.completed)
-      .filter(task => {
-        const due = new Date(task.dueDate);
-        const diff = due - now;
-        return diff > 0 && diff <= 60 * 60 * 1000; // 1 hour before
-      })
-      .map(task => ({ message: `Task "${task.title}" is due soon!` }));
-    setNotifications(upcoming);
-  };
+    // Check deadlines whenever tasks change
+    useEffect(() => {
+        const checkDeadlines = () => {
+            const now = new Date();
+            const upcoming = tasks
+                .filter(task => !task.completed)
+                .filter(task => {
+                    const due = new Date(task.dueDate);
+                    const diff = due - now;
+                    return diff > 0 && diff <= 60 * 60 * 1000; // 1 hour before
+                })
+                .map(task => ({
+                    title: task.title,
+                    dueDate: task.dueDate,
+                    message: `Task "${task.title}" is due soon!`
+                }));
+            setNotifications(upcoming);
+        };
 
-  checkDeadlines();
-  const interval = setInterval(checkDeadlines, 60 * 1000);
-  return () => clearInterval(interval);
-}, [tasks]);
+        checkDeadlines();
+        const interval = setInterval(checkDeadlines, 60 * 1000);
+        return () => clearInterval(interval);
+    }, [tasks]);
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -91,12 +97,16 @@ useEffect(() => {
                                     ) : (
                                         Notifications.map((n, idx) => (
                                             <div key={idx} className="border-b py-1">
-                                                {n.message}
+                                                <p className="text-sm font-medium">{n.title}</p>
+                                                <p className="text-sm text-gray-500 mt-1">
+                                                    Due: {new Date(n.dueDate).toLocaleString()}
+                                                </p>
                                             </div>
                                         ))
                                     )}
                                 </div>
                             )}
+
 
                         </li>
                         {/*<li><a href="/" className="hover:text-blue-200">Invite members</a></li>
