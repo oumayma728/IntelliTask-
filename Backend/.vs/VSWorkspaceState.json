@@ -1,0 +1,15 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\Controllers",
+    "\\Data",
+    "\\DTOs",
+    "\\Hubs",
+    "\\Middlewares",
+    "\\Models",
+    "\\Properties",
+    "\\Repositories",
+    "\\Services"
+  ],
+  "PreviewInSolutionExplorer": false
+}

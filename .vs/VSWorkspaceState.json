@@ -1,0 +1,13 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\Backend",
+    "\\Backend\\Repositories",
+    "\\Backend\\Services",
+    "\\SmartTaskManager.Backend.Tests",
+    "\\SmartTaskManager.Backend.Tests\\bin",
+    "\\SmartTaskManager.Backend.Tests\\Integration",
+    "\\SmartTaskManager.Backend.Tests\\Unit"
+  ],
+  "PreviewInSolutionExplorer": false
+}

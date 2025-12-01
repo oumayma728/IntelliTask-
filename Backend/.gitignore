@@ -1,0 +1,15 @@
+# Ignore appsettings with secrets
+appsettings.json
+appsettings.Development.json
+service-account.json
+
+# Ignore build output
+bin/
+obj/
+
+# Ignore user-specific files
+*.user
+*.suo
+
+# Ignore logs
+*.log

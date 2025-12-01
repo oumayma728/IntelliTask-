@@ -5,7 +5,6 @@ import { ChangePassword } from "../api/AuthApi";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import {jwtDecode} from "jwt-decode";
-import { coerceAndCheckDataType } from "ajv/dist/compile/validate/dataType";
 
 export default function ProfileSettings({ userId, userData, profileImage }) {
     const fileInputRef = useRef(null);
