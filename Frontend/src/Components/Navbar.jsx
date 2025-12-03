@@ -63,6 +63,7 @@ export default function Navbar() {
         }
 
     };
+    // Load saved image from localStorage on component mount
     useEffect(() => {
         const savedImage = localStorage.getItem("profileImage");
         if (savedImage) setProfileImage(savedImage);
