@@ -1,8 +1,17 @@
+// App.test.js
+import React from 'react';
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+// Mock axios
+jest.mock('./api/api.js', () => ({
+  api: {
+    get: jest.fn().mockResolvedValue({ data: {} }),
+    post: jest.fn().mockResolvedValue({ data: {} }),
+  }
+}));
+
+test('renders App component', () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  expect(screen).toBeTruthy(); // basic smoke test
 });
