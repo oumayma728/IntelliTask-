@@ -16,6 +16,7 @@ namespace smart_task_manager.Services
     {
         Task<IdentityResult> RegisterAsync(string email, string password);
         Task<LoginResponseDto?> LoginAsync(string email, string password);
+        Task<IdentityResult> ResetPassword(string email, string NewPassword);
     }
 
     // 2. SERVICE CLASS (the implementation) - at same level as interface
@@ -111,5 +112,18 @@ namespace smart_task_manager.Services
             return generatedToken;
         }
 
+
+        public async Task<IdentityResult> ResetPassword(string email, string NewPassword)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+                return IdentityResult.Failed(new IdentityError { Description = "User not found." });
+
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, resetToken, NewPassword);
+            return result; // ✅ return IdentityResult
+        }
+
     }
 }
+

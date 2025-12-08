@@ -68,6 +68,18 @@ namespace smart_task_manager.Controllers
             // 5. Return success
             return Ok(new { message = "Password updated successfully." });
         }
+        //Reset Password
+        [HttpPost("ResetPassword")]
+        public async Task<ActionResult> ResetPassword(ResetPasswordDto model)
+        {
+            var result = await _authService.ResetPassword(model.Email, model.NewPassword);
 
+            if (!result.Succeeded)
+            {
+                return BadRequest(result.Errors); 
+            }
+
+            return Ok("Password has been reset successfully.");
+        }
     }
 }
