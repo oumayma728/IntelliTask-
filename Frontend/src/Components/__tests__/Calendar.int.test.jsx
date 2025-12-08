@@ -1,0 +1,108 @@
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import MyCalendar from "../Calendar.jsx";
+import { useAuth } from "../../Context/AuthContext";
+
+jest.mock("axios", () => {
+  const mockAxios = {
+    get: jest.fn().mockResolvedValue({ data: [] }),
+    post: jest.fn().mockResolvedValue({ data: [] }),
+    put: jest.fn().mockResolvedValue({ data: [] }),
+    delete: jest.fn().mockResolvedValue({ data: [] }),
+    interceptors: {
+      request: { use: jest.fn(), eject: jest.fn() },
+      response: { use: jest.fn(), eject: jest.fn() },
+    },
+  };
+
+
+  return {
+    create: jest.fn(() => mockAxios),
+  };
+});
+
+Object.defineProperty(window, "alert", {
+  writable: true,
+  value: jest.fn(),
+});
+
+const mockSetEvents = jest.fn();
+const mockFetchAllEvents = jest.fn();
+const mockHandleSave = jest.fn();
+const mockHandleDeleteEvent = jest.fn();
+const mockUpdateEventLocally = jest.fn();
+const mockRefreshAllEvents = jest.fn();
+
+jest.mock("../../hooks/useEvents", () => () => ({
+    events: [],
+    setEvents: jest.fn(),
+    fetchAllEvents: jest.fn(),
+    handleSave: jest.fn(),
+    handleDeleteEvent: jest.fn(),
+    updateEventLocally: jest.fn(),
+    refreshAllEvents: jest.fn()
+}));
+
+const mockCheckConnection = jest.fn().mockResolvedValue([]);;
+const mockFetchGoogleEvents = jest.fn();
+const mockConnectGoogleCalendar = jest.fn();
+const mockDisconnectGoogleCalendar = jest.fn();
+
+jest.mock("../../hooks/useGoogleCalendar", () => () => ({
+  fetchGoogleEvents: mockFetchGoogleEvents,
+  checkGoogleConnection: mockCheckConnection,
+  connectGoogleCalendar: mockConnectGoogleCalendar,
+  disconnectGoogleCalendar: mockDisconnectGoogleCalendar
+}));
+
+describe("Google Calendar Integration", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        delete window.location;
+        window.location = { search: "" };
+    });
+      test("renders calendar and buttons", () => {
+    render(<MyCalendar />);
+    
+    // Check for Refresh All button
+    expect(screen.getByText("Refresh All")).toBeInTheDocument();
+    
+    // Check for Connect Google Calendar button
+    expect(screen.getByText("Connect Google Calendar")).toBeInTheDocument();
+  });
+test("clicking connect Google Calendar button calls connectGoogleCalendar()", async () => {
+    render(< MyCalendar />);
+    
+    const connectBtn = await screen.findByText("Connect Google Calendar");
+    fireEvent.click(connectBtn);
+
+    expect(mockConnectGoogleCalendar).toHaveBeenCalledTimes(1);
+  });
+
+  test("handles OAuth callback with success", async() =>{
+    window.location.search = "?accessToken=test-token&refreshToken=refresh-token&expiresIn=3600";
+
+    render(<MyCalendar />);
+     // Check that localStorage was called with tokens
+        await waitFor(() => {
+            const tokens = JSON.parse(localStorage.getItem('googleCalendarTokens'));
+            expect(tokens).toEqual({
+                accessToken: 'test-token',
+                refreshToken: 'refresh-token',
+                expiresAt: expect.any(Number)
+            });
+        });
+        // Check that fetchGoogleEvents was called
+        expect(mockFetchGoogleEvents).toHaveBeenCalled();
+  });
+  test("disconnects Google Calendar on button click", async () => {
+    window.location.search = "?accessToken=test-token&refreshToken=refresh-token&expiresIn=3600";
+
+        render(<MyCalendar />);
+
+    const disconnectBtn = await screen.findByText("Disconnect Google");
+    fireEvent.click(disconnectBtn);
+            expect(mockDisconnectGoogleCalendar).toHaveBeenCalled();
+
+
+  });
+});
