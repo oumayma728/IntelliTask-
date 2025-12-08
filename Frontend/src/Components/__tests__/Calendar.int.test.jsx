@@ -94,6 +94,16 @@ test("clicking connect Google Calendar button calls connectGoogleCalendar()", as
         // Check that fetchGoogleEvents was called
         expect(mockFetchGoogleEvents).toHaveBeenCalled();
   });
+
+  test("Refresh Google Events button", async () => {
+    window.location.search = "?accessToken=test-token&refreshToken=refresh-token&expiresIn=3600";
+        render(<MyCalendar />);
+const RefreshBtn = await screen.findByText("Refresh Google");
+    fireEvent.click(RefreshBtn);
+    expect(mockFetchGoogleEvents).toHaveBeenCalled();
+  });
+
+
   test("disconnects Google Calendar on button click", async () => {
     window.location.search = "?accessToken=test-token&refreshToken=refresh-token&expiresIn=3600";
 
