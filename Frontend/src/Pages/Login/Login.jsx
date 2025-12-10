@@ -2,7 +2,7 @@ import { useState } from "react";
 import { login } from "../../api/AuthApi";
 import { useAuth } from "../../Context/AuthContext"
 import { Link, useNavigate } from "react-router-dom"; // ✅ useNavigate instead of Navigate
-import {  useGoogleLogin } from "@react-oauth/google";
+import { useGoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 export default function Login() {
@@ -11,7 +11,7 @@ export default function Login() {
     const [error, setError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     //useAuth() returns values/functions from your authentication context.
-    const {loginUser } = useAuth();
+    const { loginUser } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
@@ -20,18 +20,15 @@ export default function Login() {
         setError("");
         try {
             const data = await login(email, password);
-            if (!data || !data.token) {
+            if (!data || !data.token || !data.token.Token) {
                 alert("Login failed: No token received");
 
                 return;
             }
-            console.log("API response:", data);
-            console.log("mode:", data.token.Mode);
 
             loginUser(data.token);
 
-
-            console.log("Token saved:", localStorage.getItem('token'));
+            localStorage.getItem('token');
 
             if (data.token.Mode === "personal") {
                 console.log("Navigating to PersonalDashboard");
@@ -50,7 +47,8 @@ export default function Login() {
 
         }
         catch (err) {
-            alert(err.response?.data)
+            console.error("Login error:", err);
+
         }
     };
     const googleLogin = useGoogleLogin({
