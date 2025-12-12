@@ -13,11 +13,8 @@ jest.mock("axios", () => {
       response: { use: jest.fn(), eject: jest.fn() },
     },
   };
-
-
   return {
-    create: jest.fn(() => mockAxios),
-  };
+    create: jest.fn(() => mockAxios)};
 });
 
 Object.defineProperty(window, "alert", {
@@ -33,25 +30,29 @@ const mockUpdateEventLocally = jest.fn();
 const mockRefreshAllEvents = jest.fn();
 
 jest.mock("../../hooks/useEvents", () => () => ({
-    events: [],
-    setEvents: jest.fn(),
-    fetchAllEvents: jest.fn(),
-    handleSave: jest.fn(),
-    handleDeleteEvent: jest.fn(),
-    updateEventLocally: jest.fn(),
-    refreshAllEvents: jest.fn()
+  events: [],
+  setEvents: mockSetEvents,
+  fetchAllEvents: mockFetchAllEvents,
+  handleSave: mockHandleSave,
+  handleDeleteEvent: mockHandleDeleteEvent,
+  updateEventLocally: mockUpdateEventLocally,
+  refreshAllEvents: mockRefreshAllEvents
 }));
+
 
 const mockCheckConnection = jest.fn().mockResolvedValue([]);;
 const mockFetchGoogleEvents = jest.fn();
 const mockConnectGoogleCalendar = jest.fn();
+const mockSetIsGoogleConnected = jest.fn();
 const mockDisconnectGoogleCalendar = jest.fn();
+
 
 jest.mock("../../hooks/useGoogleCalendar", () => () => ({
   fetchGoogleEvents: mockFetchGoogleEvents,
   checkGoogleConnection: mockCheckConnection,
   connectGoogleCalendar: mockConnectGoogleCalendar,
-  disconnectGoogleCalendar: mockDisconnectGoogleCalendar
+  disconnectGoogleCalendar: mockDisconnectGoogleCalendar,
+  setIsGoogleConnected: mockSetIsGoogleConnected
 }));
 
 describe("Google Calendar Integration", () => {
@@ -59,7 +60,23 @@ describe("Google Calendar Integration", () => {
         jest.clearAllMocks();
         delete window.location;
         window.location = { search: "" };
+
+        let store = {};
+    Object.defineProperty(window, "localStorage", {
+      value: {
+        getItem: jest.fn((key) => store[key] || null),
+        setItem: jest.fn((key, value) => {
+          store[key] = value;
+        }),
+        removeItem: jest.fn((key) => {
+          delete store[key];
+        }),
+        clear: jest.fn(() => {
+          store = {};
+        }),
+      },
     });
+  });
       test("renders calendar and buttons", () => {
     render(<MyCalendar />);
     
@@ -98,7 +115,7 @@ test("clicking connect Google Calendar button calls connectGoogleCalendar()", as
   test("Refresh Google Events button", async () => {
     window.location.search = "?accessToken=test-token&refreshToken=refresh-token&expiresIn=3600";
         render(<MyCalendar />);
-const RefreshBtn = await screen.findByText("Refresh Google");
+const RefreshBtn = await screen.findByRole("button", { name: /Refresh Google/i });
     fireEvent.click(RefreshBtn);
     expect(mockFetchGoogleEvents).toHaveBeenCalled();
   });
