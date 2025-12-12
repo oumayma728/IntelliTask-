@@ -116,8 +116,7 @@ export default function Navbar() {
                     <button
                         onClick={() => setShowChatBot(!showChatBot)}
                         className="px-3 py-1 rounded-md "
-                    >
-                        SideKick
+                    >SideKick
                     </button>
                     {showChatBot && (
                         <div className="fixed bottom-20 right-5 w-80 h-96 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg z-50 flex flex-col">
@@ -125,8 +124,7 @@ export default function Navbar() {
                             <button
                                 className="self-end m-2 bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
                                 onClick={() => setShowChatBot(false)}
-                            >
-                                Close
+                            >Close
                             </button>
                         </div>
                     )}

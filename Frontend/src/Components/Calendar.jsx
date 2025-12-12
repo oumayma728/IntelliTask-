@@ -15,8 +15,6 @@ export default function MyCalendar() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [isOpenEvent, setIsOpenEvent] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [isGoogleConnected, setIsGoogleConnected] = useState(false);
-  const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [loadingEvents, setLoadingEvents] = useState(false);
 
   const {
@@ -29,12 +27,15 @@ export default function MyCalendar() {
     refreshAllEvents
   } = useEvents();
 
-  const {
-
+const {
+    isGoogleConnected,
+    loadingGoogle,
+    setLoadingGoogle,
     fetchGoogleEvents,
     checkGoogleConnection,
     connectGoogleCalendar,
-    disconnectGoogleCalendar
+    disconnectGoogleCalendar,
+    setIsGoogleConnected
   } = useGoogleCalendar();
 
 
@@ -57,7 +58,6 @@ export default function MyCalendar() {
 
     // If we have tokens, store them
     if (accessToken && refreshToken) {
-      setLoadingGoogle(true);
       try {        
         // Store tokens with expiry
         const tokensWithExpiry = {
@@ -85,22 +85,19 @@ export default function MyCalendar() {
       } catch (error) {
         console.error("Failed to connect Google Calendar:", error);
         alert("Failed to connect Google Calendar. Please try again.");
-      } finally {
-        setLoadingGoogle(false);
-      }
+      } 
     }
-  }, [fetchGoogleEvents]);
+  }, [fetchGoogleEvents, setEvents, setIsGoogleConnected]);
 
   // runs once 
-  useEffect(() => {
-
-    const init = async () => {
-      checkGoogleConnection();
-      await handleOAuthCallback();
-      await fetchAllEvents();
-    };
-    init();
-  }, []);
+useEffect(() => {
+  const init = async () => {
+    checkGoogleConnection();
+    await handleOAuthCallback();
+    await fetchAllEvents();
+  };
+  init();
+}, [checkGoogleConnection, handleOAuthCallback, fetchAllEvents]); // Add dependencies
 
   // Refresh Google events only
   const refreshGoogleEvents = async () => {
