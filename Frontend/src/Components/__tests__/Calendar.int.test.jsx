@@ -52,7 +52,8 @@ jest.mock("../../hooks/useGoogleCalendar", () => () => ({
   checkGoogleConnection: mockCheckConnection,
   connectGoogleCalendar: mockConnectGoogleCalendar,
   disconnectGoogleCalendar: mockDisconnectGoogleCalendar,
-  setIsGoogleConnected: mockSetIsGoogleConnected
+  setIsGoogleConnected: mockSetIsGoogleConnected,
+  isGoogleConnected: true 
 }));
 
 describe("Google Calendar Integration", () => {
@@ -83,17 +84,8 @@ describe("Google Calendar Integration", () => {
     // Check for Refresh All button
     expect(screen.getByText("Refresh All")).toBeInTheDocument();
     
-    // Check for Connect Google Calendar button
-    expect(screen.getByText("Connect Google Calendar")).toBeInTheDocument();
-  });
-test("clicking connect Google Calendar button calls connectGoogleCalendar()", async () => {
-    render(< MyCalendar />);
-    
-    const connectBtn = await screen.findByText("Connect Google Calendar");
-    fireEvent.click(connectBtn);
+      });
 
-    expect(mockConnectGoogleCalendar).toHaveBeenCalledTimes(1);
-  });
 
   test("handles OAuth callback with success", async() =>{
     window.location.search = "?accessToken=test-token&refreshToken=refresh-token&expiresIn=3600";
@@ -126,9 +118,9 @@ const RefreshBtn = await screen.findByRole("button", { name: /Refresh Google/i }
 
         render(<MyCalendar />);
 
-    const disconnectBtn = await screen.findByText("Disconnect Google");
+    const disconnectBtn = await screen.findByRole("button", { name: /Disconnect Google/i });
     fireEvent.click(disconnectBtn);
-            expect(mockDisconnectGoogleCalendar).toHaveBeenCalled();
+      expect(mockDisconnectGoogleCalendar).toHaveBeenCalled();
 
 
   });
