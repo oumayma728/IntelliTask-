@@ -1,35 +1,41 @@
 import Login from "./Login.jsx";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { login } from "../../api/AuthApi";
 import { useAuth } from "../../Context/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-//mock 
+// Mocks
 jest.mock("../../api/AuthApi", () => ({
-  login: jest.fn().mockResolvedValue({ token: { Mode: "personal" } })
-}));
-jest.mock("../../Context/AuthContext");
-// At the top of Login.test.js
-jest.mock("@react-oauth/google", () => ({
-  useGoogleLogin: jest.fn(() => jest.fn()), // returns a dummy function
-  GoogleLogin: ({ onSuccess, onError }) => (
-    <button onClick={() => onSuccess({ credential: "dummy" })}>GoogleLogin</button>
-  ),
-  googleLogout: jest.fn()
+    login: jest.fn(),
 }));
 
-jest.mock("react-router-dom", () => ({ //mock navigation functions
+
+jest.mock("../../Context/AuthContext", () => ({
+    useAuth: jest.fn(),
+}));
+
+jest.mock("@react-oauth/google", () => ({
+    useGoogleLogin: jest.fn(() => jest.fn()), // dummy function
+    GoogleLogin: ({ onSuccess, onError }) => (
+        <button onClick={() => onSuccess({ credential: "dummy" })}>GoogleLogin</button>
+    ),
+    googleLogout: jest.fn(),
+}));
+
+jest.mock("react-router-dom", () => ({
     useNavigate: jest.fn(),
     Link: ({ children }) => children,
 }));
-global.alert = jest.fn();
 
+global.alert = jest.fn();
 
 describe("Login Component", () => {
     let mockLoginUser;
     let mockNavigate;
-    //sets up fresh mocks before each test to avoid contamination between tests.
+
     beforeEach(() => {
+        jest.clearAllMocks();
+
         mockLoginUser = jest.fn();
         useAuth.mockReturnValue({
             loginUser: mockLoginUser,
@@ -37,26 +43,27 @@ describe("Login Component", () => {
             setToken: jest.fn(),
             setMode: jest.fn(),
         });
+
         mockNavigate = jest.fn();
         useNavigate.mockReturnValue(mockNavigate);
+        login.mockResolvedValue({ token: { Mode: "Personal", Token: "fake-token" } });
+
     });
 
-    test('renders email and password inputs and login button', () => {
+    test("renders email and password inputs and login button", () => {
         render(<Login />);
-
-        //check inputs and button are present
         expect(screen.getByPlaceholderText("Email")).toBeInTheDocument();
         expect(screen.getByPlaceholderText("Password")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: /Login/i })).toBeInTheDocument();
     });
 
-    test("calls login api and loginUser on submit", async () => {
+    test("calls login API and loginUser on submit", async () => {
         login.mockResolvedValue({
-            token: { Mode: "personal" }
+            token: { Mode: "personal", Token: "fake-token" }
         });
+
         render(<Login />);
 
-        //fireEvent.click simulates user typing 
         fireEvent.change(screen.getByPlaceholderText("Email"), {
             target: { value: "test@example.com" },
         });
@@ -64,15 +71,15 @@ describe("Login Component", () => {
             target: { value: "123456" },
         });
 
-        //Click submit
-        fireEvent.click(screen.getByRole("button", { name: /login/i }));
+        const form = screen.getByTestId("login-form");
+        fireEvent.submit(form);
 
-        // Wait for async actions to complete
-        await screen.findByRole("button", { name: /login/i });
 
-        expect(login).toHaveBeenCalledWith("test@example.com", "123456");
-        expect(mockLoginUser).toHaveBeenCalledWith({ Mode: "personal" });
-        expect(mockNavigate).toHaveBeenCalledWith("/PersonalDashboard");
-
+        // Wait for async state updates and effects
+        await waitFor(() => {
+            expect(login).toHaveBeenCalledWith("test@example.com", "123456");
+            expect(mockLoginUser).toHaveBeenCalledWith({ Mode: "personal", Token: "fake-token" });
+            expect(mockNavigate).toHaveBeenCalledWith("/PersonalDashboard");
+        });
     });
 });

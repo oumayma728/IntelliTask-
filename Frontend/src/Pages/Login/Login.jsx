@@ -75,7 +75,7 @@ export default function Login() {
                     />
                     Sign in with Google
                 </button>
-                <form className="flex flex-col  py-4 gap-5" onSubmit={handleSubmit}>
+                <form data-testid="login-form" onSubmit={handleSubmit} className="flex flex-col  py-4 gap-5">
                     <input value={email}
                         onChange={e => SetEmail(e.target.value)}
                         placeholder="Email"
