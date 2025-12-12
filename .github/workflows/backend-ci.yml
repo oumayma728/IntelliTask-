@@ -1,0 +1,29 @@
+name : Backend CI
+#Define When the Pipeline Runs
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+jobs:
+    backend-tests:
+        runs-on: ubuntu-latest
+        steps:
+            - name: checkout code
+              uses: actions/checkout@v3
+
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v3
+              with:
+                dotnet-version: 9.0.200
+
+            - name: Restore dependencies
+              run: dotnet restore ./Backend/smart task manager.csproj
+
+            - name: Build backend
+              run: dotnet build  ./Backend/smart task manager.csproj
+
+            - name: Run backend tests
+              run: dotnet test ./SmartTaskManager.Backend.Tests/SmartTaskManager.Backend.Tests.csproj --no-build --verbosity normal
+
+
