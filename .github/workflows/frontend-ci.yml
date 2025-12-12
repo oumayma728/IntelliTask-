@@ -10,10 +10,12 @@ jobs:
   steps:
     - name: Checkout code
       uses: actions/checkout@v3
-    - name: Restore dependencies
-      run: npm install ./Frontend
+    - name: Install dependencies
+      run: npm install 
+      working-directory: ./Frontend
     - name: Build Project
-      run: npm start ./Frontend
-    - name: Run Tests
-      run: npm test ./Frontend --no-build --verbosity normal
-
+      run: npm run build 
+      working-directory: ./Frontend
+    - name: Run tests
+      run: npm test -- --ci
+      working-directory: ./Frontend
