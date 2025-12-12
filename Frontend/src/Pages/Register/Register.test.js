@@ -1,65 +1,63 @@
-import Register from "./Register.jsx";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { register } from "../../api/AuthApi";
+import Register from "./Register";
 import { useAuth } from "../../Context/AuthContext";
-import { Link, useNavigate } from "react-router-dom";   
+import { register } from "../../api/AuthApi";
 
-//mock 
-jest.mock("../../api/AuthApi.js",()=>({
+// Mock the AuthContext
+const mockLoginUser = jest.fn();
+jest.mock("../../Context/AuthContext", () => ({
+    useAuth: () => ({
+        loginUser: mockLoginUser
+    })
+}));
+
+// Mock the register API
+jest.mock("../../api/AuthApi", () => ({
     register: jest.fn()
 }));
-jest.mock("../../Context/AuthContext"); 
-jest.mock("react-router-dom", () => ({ //mock navigation functions
-    useNavigate: jest.fn(),
-    Link: ({ children }) => children,
-}));
-global.alert = jest.fn();
 
-describe("Register Component",()=>{
-    let mockRegisterUser;
-    let mockNavigate;
+describe("Register Component", () => {
     beforeEach(() => {
-        mockRegisterUser = jest.fn();
-        useAuth.mockReturnValue({
-            RegisterUser: mockRegisterUser,
-            setUser: jest.fn(),
-            setToken: jest.fn(),
-            setMode: jest.fn(),
-        });
-        mockNavigate = jest.fn();
-        useNavigate.mockReturnValue(mockNavigate);
+        jest.clearAllMocks();
     });
 
-    test('renders email and password inputs and register button', () => {
-        render(<Register />);
-
-        expect(screen.getByPlaceholderText("email")).toBeInTheDocument();
-        expect(screen.getByPlaceholderText("password")).toBeInTheDocument();
-        expect(screen.getByTestId("mode-select")).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /Register/i })).toBeInTheDocument();
-        });
-
-    test("calls register api and RegisterUser on submit", async () => {
+    test("calls register API and loginUser on submit", async () => {
+        // Mock the register API to return expected data
         register.mockResolvedValue({
-            token: { Mode: "personal" }
+            token: "fake-token",
+            Mode: "Personal"
         });
+
         render(<Register />);
-        //fireEvent.click simulates user typing 
-        fireEvent.change(screen.getByPlaceholderText("email"), {
-            target: { value: "test@example.com" },
+
+        // Fill email
+        const emailInput = screen.getByPlaceholderText("email");
+        fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+
+        // Fill password
+        const passwordInput = screen.getByPlaceholderText("password");
+        fireEvent.change(passwordInput, { target: { value: "123456" } });
+
+        // Select mode
+        const modeSelect = screen.getByTestId("mode-select");
+        fireEvent.change(modeSelect, { target: { value: "Personal" } });
+
+        // Submit the form
+        const submitButton = screen.getByRole("button", { name: /register/i });
+        fireEvent.click(submitButton);
+
+        // Wait for async effects
+        await waitFor(() => {
+            expect(register).toHaveBeenCalledWith(
+                "test@example.com",
+                "123456",
+                "Personal"
+            );
+
+            expect(mockLoginUser).toHaveBeenCalledWith({
+                token: "fake-token",
+                Mode: "Personal"
+            });
         });
-        fireEvent.change(screen.getByPlaceholderText("password"), {
-            target: { value: "123456" },
-        });
-
-        fireEvent.change(screen.getByTestId("mode-select"), {
-  target: { value: "Team" }
-});
-
-
-        //Click submit
-        fireEvent.click(screen.getByRole("button", { name: /Register/i }));
-    expect(register).toHaveBeenCalledWith("test@example.com", "123456", "Team");
-
     });
 });
