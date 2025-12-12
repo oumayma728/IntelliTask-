@@ -1,0 +1,19 @@
+name : Frontend CI
+on:
+  push:
+    branches: [ main ]      # runs when you push to main or dev
+  pull_request:
+    branches: [ main ]
+jobs:
+  frontend-tests:
+    runs-on:ubuntu-latest
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Restore dependencies
+      run: npm install ./Frontend
+    - name: Build Project
+      run: npm start ./Frontend
+    - name: Run Tests
+      run: npm test ./Frontend --no-build --verbosity normal
+
