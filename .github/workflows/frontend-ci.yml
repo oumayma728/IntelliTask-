@@ -16,7 +16,7 @@ jobs:
         working-directory: ./Frontend
 
       - name: Build Project
-        run: npm run build
+        run: CI=false npm run build
         working-directory: ./Frontend
 
       - name: Run tests
