@@ -1,0 +1,22 @@
+name: E2E tests
+on:
+  push:
+    paths:
+      - "frontend/**"
+      - "backend/**"
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # install frontend
+      - run: cd frontend && npm install && npm run dev &
+
+      # wait for services
+      - run: npx wait-on http://localhost:3000 
+
+      # run e2e
+      - run: npx cypress run
