@@ -47,8 +47,15 @@ public class DeadlineCheckerService : BackgroundService
                 }
             }
 
-            // wait 1 hour before checking again
-            await Task.Delay(TimeSpan.FromHours(1), stoppingToken);// wait 1 hour before checking again
+            // wait for DB to be ready (startup delay)
+            await Task.Delay(TimeSpan.FromSeconds(15), stoppingToken);
+
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                // check deadlines
+                await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
+            }
+
         }
     }
 }
