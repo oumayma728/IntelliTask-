@@ -1,0 +1,38 @@
+version: '3.9'
+services:
+  db:
+     image: mcr.microsoft.com/mssql/server:2022-latest
+     container_name: myapp-sql
+     environment:
+       SA_PASSWORD: "99201988Ou$"
+       ACCEPT_EULA: "Y"
+     ports:
+       - "1433:1433"
+     volumes:
+       - sql_data:/var/opt/mssql
+
+
+  backend:
+    build: ./Backend
+    container_name: myapp-backend
+    ports:
+      - "5000:5000"
+    environment:
+    - ConnectionStrings__DefaultConnection=Server=db,1433;Database=TaskManagerDB;User Id=sa;Password=99201988Ou$;TrustServerCertificate=True;MultipleActiveResultSets=True
+    depends_on:
+      - db
+
+
+  frontend:
+     build: ./Frontend
+     container_name: react-frontend
+     ports:
+       - "3000:3000"
+     depends_on:
+        - backend
+
+
+
+volumes:
+  sql_data:
+    
