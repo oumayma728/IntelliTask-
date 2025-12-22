@@ -61,12 +61,6 @@ const toolbarButtons = [
           <button className="flex items-center gap-2 text-gray-300 hover:text-white transition">
             <FaSearch /> Search
           </button>
-          <button className="flex items-center gap-2 text-gray-300 hover:text-white transition">
-            <FaFilter /> Filter
-          </button>
-          <button className="flex items-center gap-2 text-gray-300 hover:text-white transition">
-            <FaAngleDoubleDown /> Sort
-          </button>
         </div>
 
         <div className="flex items-center gap-3 text-gray-300">
